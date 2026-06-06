@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('auth_user', JSON.stringify(authUser));
     } catch (err: unknown) {
+      console.error('Login error:', err);
       const axiosErr = err as { response?: { data?: { error?: string; detail?: string } } };
       const message = axiosErr.response?.data?.error || axiosErr.response?.data?.detail || 'Login failed';
       setError(message);
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('auth_user', JSON.stringify(authUser));
     } catch (err: unknown) {
+      console.error('Registration error:', err);
       const axiosErr = err as { response?: { data?: { username?: string[]; password_confirm?: string[]; detail?: string } } };
       const message = axiosErr.response?.data?.username?.[0] || 
                       axiosErr.response?.data?.password_confirm?.[0] ||
