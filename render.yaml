@@ -30,13 +30,14 @@ services:
           property: url
 
   # Frontend Static Site (Vite + React)
-  - type: static
+  - type: web
     name: ricemill-frontend
+    env: static
     buildCommand: |
       cd frontend
       npm install
       npm run build
-    publishDir: frontend/dist
+    staticPublishPath: frontend/dist
     routes:
       # Rewrite rule to handle React Router client-side routing on page refreshes
       - type: rewrite
