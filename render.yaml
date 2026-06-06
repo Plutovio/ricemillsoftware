@@ -24,10 +24,7 @@ services:
       - key: ALLOWED_HOSTS
         value: "*"
       - key: FRONTEND_URL
-        fromRoute:
-          type: web
-          name: ricemill-frontend
-          property: url
+        value: ${ricemill-frontend}
 
   # Frontend Static Site (Vite + React)
   - type: web
