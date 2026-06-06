@@ -13,10 +13,6 @@ services:
       cd backend
       gunicorn config.wsgi:application
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: ricemill-db
-          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
@@ -43,7 +39,3 @@ services:
     envVars:
       - key: VITE_API_URL
         value: ${ricemill-backend}/api
-
-databases:
-  - name: ricemill-db
-    plan: free
