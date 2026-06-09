@@ -127,11 +127,21 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
     const selectedVal = e.target.value;
     setBranchName(selectedVal);
     const branchOpt = branches.find(b => b.value === selectedVal);
-    if (branchOpt && branchOpt.meta?.ifsc) {
-      setIfscCode(branchOpt.meta.ifsc);
-    } else {
-      setIfscCode('');
+    if (branchOpt && branchOpt.meta) {
+      let metaObj: any = branchOpt.meta;
+      if (typeof metaObj === 'string') {
+        try {
+          metaObj = JSON.parse(metaObj);
+        } catch {
+          metaObj = null;
+        }
+      }
+      if (metaObj && typeof metaObj === 'object' && 'ifsc' in metaObj) {
+        setIfscCode(metaObj.ifsc || '');
+        return;
+      }
     }
+    setIfscCode('');
   };
 
   // Live Calculations
@@ -297,28 +307,28 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
         </div>
 
         {/* Live Calculation Output Card */}
-        <div className="mt-4 bg-navy-50/50 border border-navy-100 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4 select-none">
+        <div className="mt-4 bg-navy-50/50 dark:bg-navy-950/20 border border-navy-100 dark:border-navy-900 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4 select-none transition-colors">
           <div>
-            <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider block">Computed PDC (2/3)</span>
-            <span className="text-sm font-semibold text-navy-800 font-mono">
+            <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase font-semibold tracking-wider block">Computed PDC (2/3)</span>
+            <span className="text-sm font-semibold text-navy-800 dark:text-navy-200 font-mono">
               ₹ {formatCurrency(livePDC)}
             </span>
           </div>
           <div>
-            <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider block">Total Amount (BG + PDC)</span>
-            <span className="text-sm font-semibold text-navy-800 font-mono">
+            <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase font-semibold tracking-wider block">Total Amount (BG + PDC)</span>
+            <span className="text-sm font-semibold text-navy-800 dark:text-navy-200 font-mono">
               ₹ {formatCurrency(liveTotal)}
             </span>
           </div>
           <div>
-            <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider block">Quantity Allocation</span>
-            <span className="text-sm font-semibold text-navy-800 font-mono">
+            <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase font-semibold tracking-wider block">Quantity Allocation</span>
+            <span className="text-sm font-semibold text-navy-800 dark:text-navy-200 font-mono">
               {liveQty.toLocaleString('en-IN', { minimumFractionDigits: 2 })} kg
             </span>
           </div>
           <div>
-            <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider block">No. of Days validity</span>
-            <span className={`text-sm font-semibold font-mono ${liveDays < 0 ? 'text-red-500' : 'text-navy-800'}`}>
+            <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase font-semibold tracking-wider block">No. of Days validity</span>
+            <span className={`text-sm font-semibold font-mono ${liveDays < 0 ? 'text-red-500' : 'text-navy-800 dark:text-navy-200'}`}>
               {liveDays >= 0 ? `${liveDays} Days` : 'Invalid Date Range'}
             </span>
           </div>
@@ -326,17 +336,17 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
       </div>
 
       {/* Payment Details (Cheque / Online) */}
-      <div className="border-t border-gray-100 pt-6">
+      <div className="border-t border-gray-100 dark:border-slate-800 pt-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Guarantee Payment Details</h3>
           {/* Segmented Control Mode Toggle */}
-          <div className="flex rounded-lg border border-gray-200 p-0.5 bg-gray-50 w-48">
+          <div className="flex rounded-lg border border-gray-205 dark:border-slate-700 p-0.5 bg-gray-50 dark:bg-slate-800 w-48">
             <button
               type="button"
               className={`flex-1 py-1 text-[11px] font-bold rounded-md transition-all select-none ${
                 paymentMode === 'cheque'
-                  ? 'bg-white text-navy-800 shadow-sm border border-gray-150 font-semibold'
-                  : 'text-gray-500 hover:text-gray-800'
+                  ? 'bg-white dark:bg-slate-700 text-navy-800 dark:text-navy-100 shadow-sm border border-gray-150 dark:border-slate-600 font-semibold'
+                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-805 dark:hover:text-slate-200'
               }`}
               onClick={() => setPaymentMode('cheque')}
             >
@@ -346,8 +356,8 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
               type="button"
               className={`flex-1 py-1 text-[11px] font-bold rounded-md transition-all select-none ${
                 paymentMode === 'online'
-                  ? 'bg-white text-navy-800 shadow-sm border border-gray-150 font-semibold'
-                  : 'text-gray-500 hover:text-gray-800'
+                  ? 'bg-white dark:bg-slate-700 text-navy-800 dark:text-navy-100 shadow-sm border border-gray-150 dark:border-slate-600 font-semibold'
+                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-805 dark:hover:text-slate-200'
               }`}
               onClick={() => setPaymentMode('online')}
             >
@@ -357,7 +367,7 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
         </div>
 
         {paymentMode === 'cheque' ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-150">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 dark:bg-slate-850 rounded-xl border border-gray-150 dark:border-slate-800">
             <RMInput
               label="Cheque Number"
               placeholder="e.g. 102345"
@@ -392,7 +402,7 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
             />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-150">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 dark:bg-slate-850 rounded-xl border border-gray-150 dark:border-slate-800">
             <RMInput
               label="Transaction ID / Ref"
               placeholder="e.g. TXN987654321"
@@ -428,9 +438,9 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
       </div>
 
       {/* PDC Cheque Details (Security) */}
-      <div className="border-t border-gray-100 pt-6">
+      <div className="border-t border-gray-100 dark:border-slate-800 pt-6">
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">PDC Cheque Details (Security)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-navy-50/30 rounded-xl border border-navy-100/50">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-navy-50/30 dark:bg-navy-950/10 rounded-xl border border-navy-100/50 dark:border-navy-900/50">
           <RMInput
             label="PDC Cheque Number"
             placeholder="e.g. 991234"
@@ -463,7 +473,7 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
       </div>
 
       {/* Buttons */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-800">
         <RMButton type="button" variant="outline" onClick={onCancel} disabled={saving}>
           Cancel
         </RMButton>

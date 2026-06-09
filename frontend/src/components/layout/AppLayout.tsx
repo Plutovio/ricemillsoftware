@@ -17,7 +17,7 @@ export function AppLayout() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors duration-250">
       {/* Sidebar Navigation */}
       <AppSidebar />
 

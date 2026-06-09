@@ -19,6 +19,7 @@ class DropdownOptionViewSet(viewsets.ModelViewSet):
     """ViewSet for managing dropdown options."""
     queryset = DropdownOption.objects.all()
     serializer_class = DropdownOptionSerializer
+    pagination_class = None
 
     def get_queryset(self):
         queryset = super().get_queryset()

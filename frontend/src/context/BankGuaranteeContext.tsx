@@ -9,7 +9,8 @@ interface BankGuaranteeContextType {
   loading: boolean;
   error: string | null;
   activeFilters: BankGuaranteeFilters;
-  selectedYear: number;
+  selectedYear: number | 'all';
+  availableYears: (number | 'all')[];
   expiringSoonRecords: BankGuarantee[];
   quantityUnit: QuantityUnit;
   currentPage: number;
@@ -21,7 +22,8 @@ interface BankGuaranteeContextType {
   deleteRecord: (id: number) => Promise<void>;
   setFilters: (filters: BankGuaranteeFilters) => void;
   clearFilters: () => void;
-  setYear: (year: number) => void;
+  setYear: (year: number | 'all') => void;
+  addYear: (year: number) => void;
   toggleUnit: () => void;
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
@@ -40,7 +42,24 @@ export function BankGuaranteeProvider({ children }: { children: React.ReactNode 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<BankGuaranteeFilters>({});
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState<(number | 'all')[]>(() => {
+    const saved = localStorage.getItem('available_years');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return ['all', 2027, 2026, 2025, 2024];
+  });
+  const [selectedYear, setSelectedYear] = useState<number | 'all'>(() => {
+    const saved = localStorage.getItem('selected_year');
+    if (saved) {
+      if (saved === 'all') return 'all';
+      const num = parseInt(saved);
+      if (!isNaN(num)) return num;
+    }
+    return new Date().getFullYear();
+  });
   const [expiringSoonRecords, setExpiringSoonRecords] = useState<BankGuarantee[]>([]);
   const [quantityUnit, setQuantityUnit] = useState<QuantityUnit>(() => {
     return (localStorage.getItem('quantity_unit') as QuantityUnit) || 'kg';
@@ -118,10 +137,23 @@ export function BankGuaranteeProvider({ children }: { children: React.ReactNode 
     setCurrentPage(1);
   }, []);
 
-  const setYear = useCallback((year: number) => {
+  const setYear = useCallback((year: number | 'all') => {
     setSelectedYear(year);
+    localStorage.setItem('selected_year', String(year));
     setCurrentPage(1);
   }, []);
+
+  const addYear = useCallback((year: number) => {
+    setAvailableYears(prev => {
+      if (prev.includes(year)) return prev;
+      const nums = prev.filter((y): y is number => typeof y === 'number');
+      const nextNums = [...nums, year].sort((a, b) => b - a);
+      const next: (number | 'all')[] = ['all', ...nextNums];
+      localStorage.setItem('available_years', JSON.stringify(next));
+      return next;
+    });
+    setYear(year);
+  }, [setYear]);
 
   const toggleUnit = useCallback(() => {
     setQuantityUnit(prev => {
@@ -178,10 +210,10 @@ export function BankGuaranteeProvider({ children }: { children: React.ReactNode 
   return (
     <BankGuaranteeContext.Provider value={{
       records, totalCount, loading, error,
-      activeFilters, selectedYear, expiringSoonRecords,
+      activeFilters, selectedYear, availableYears, expiringSoonRecords,
       quantityUnit, currentPage, pageSize, ordering,
       fetchRecords, createRecord, updateRecord, deleteRecord,
-      setFilters, clearFilters, setYear, toggleUnit,
+      setFilters, clearFilters, setYear, addYear, toggleUnit,
       setCurrentPage, setPageSize, setOrdering,
       importRecords, exportRecords, fetchExpiringSoon,
     }}>

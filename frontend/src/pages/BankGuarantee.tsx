@@ -15,10 +15,32 @@ export function BankGuaranteePage() {
     setFilters, 
     clearFilters, 
     activeFilters,
+    selectedYear,
+    setYear,
+    availableYears,
+    addYear,
     importRecords,
     exportRecords,
     loading
   } = useBankGuarantee();
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === 'add_year') {
+      const yrStr = window.prompt("Enter a new year (e.g. 2028):");
+      if (yrStr) {
+        const yr = parseInt(yrStr);
+        if (!isNaN(yr) && yr >= 2000 && yr <= 2100) {
+          addYear(yr);
+        } else {
+          alert("Invalid year. Please enter a 4-digit number between 2000 and 2100.");
+        }
+      }
+      e.target.value = String(selectedYear);
+    } else {
+      setYear(val === 'all' ? 'all' : parseInt(val));
+    }
+  };
 
   // Filters state
   const [bankName, setBankName] = useState(activeFilters.bank_name || '');
@@ -120,11 +142,32 @@ export function BankGuaranteePage() {
       {/* Top Header & Quick Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Bank Guarantee Management</h2>
-          <p className="text-xs text-gray-500 font-medium">Verify, import, and log financial security agreements</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Bank Guarantee Management</h2>
+          <p className="text-xs text-gray-500 dark:text-slate-400 font-medium">Verify, import, and log financial security agreements</p>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Year Select Dropdown */}
+          <div className="flex items-center gap-1.5 select-none mr-2">
+            <label htmlFor="year-select-bg" className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+              Year:
+            </label>
+            <select
+              id="year-select-bg"
+              value={selectedYear}
+              onChange={handleYearChange}
+              className="text-xs font-semibold text-navy-800 dark:text-navy-100 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-navy-500 transition-colors"
+            >
+              {availableYears.map((yr) => (
+                <option key={yr} value={yr}>
+                  {yr === 'all' ? 'See All' : yr}
+                </option>
+              ))}
+              <option value="add_year" className="text-navy-600 dark:text-navy-450 font-bold">
+                + Add Year...
+              </option>
+            </select>
+          </div>
           {/* Export Excel Button */}
           <RMButton
             variant="outline"
@@ -173,7 +216,7 @@ export function BankGuaranteePage() {
       </div>
 
       {/* Filters Form Panel */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-colors">
         <form onSubmit={handleApplyFilters} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <RMInput
@@ -216,7 +259,7 @@ export function BankGuaranteePage() {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-150 select-none">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-150 dark:border-slate-800 select-none">
             <RMButton type="button" variant="outline" onClick={handleClearFilters}>
               Clear Filters
             </RMButton>
@@ -258,11 +301,11 @@ export function BankGuaranteePage() {
         size="md"
       >
         <form onSubmit={handleImportSubmit} className="space-y-4">
-          <p className="text-xs text-gray-500 font-medium">
+          <p className="text-xs text-gray-500 dark:text-slate-400 font-medium">
             Upload a `.xlsx` or `.csv` file. Columns will be matched flexibly based on names (e.g. "Bank Name", "BG Number", etc.).
           </p>
 
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-navy-500 transition-colors relative">
+          <div className="border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-lg p-6 text-center hover:border-navy-500 transition-colors relative">
             <input
               type="file"
               accept=".xlsx,.xls,.csv"
@@ -270,14 +313,14 @@ export function BankGuaranteePage() {
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
             <div className="space-y-1.5 select-none">
-              <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="mx-auto h-8 w-8 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <div className="text-xs font-semibold text-gray-700">
+              <div className="text-xs font-semibold text-gray-700 dark:text-slate-300">
                 {selectedFile ? selectedFile.name : 'Choose file or drag here'}
               </div>
               {selectedFile && (
-                <div className="text-[10px] text-gray-500">
+                <div className="text-[10px] text-gray-500 dark:text-slate-450">
                   {(selectedFile.size / 1024).toFixed(1)} KB
                 </div>
               )}
@@ -285,29 +328,29 @@ export function BankGuaranteePage() {
           </div>
 
           {importError && (
-            <div className="p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg font-mono">
+            <div className="p-3 text-xs text-red-700 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg font-mono">
               {importError}
             </div>
           )}
 
           {importResult && (
-            <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div className="text-xs font-bold text-gray-900 flex items-center justify-between">
+            <div className="space-y-3 bg-gray-50 dark:bg-slate-850 p-4 rounded-lg border border-gray-200 dark:border-slate-800">
+              <div className="text-xs font-bold text-gray-900 dark:text-white flex items-center justify-between">
                 <span>Import Summary:</span>
-                <span className="text-[10px] uppercase font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] uppercase font-semibold text-green-700 bg-green-50 dark:bg-green-950/30 px-2 py-0.5 rounded-full">
                   Success
                 </span>
               </div>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>Total rows processed: <span className="font-semibold">{importResult.total_rows}</span></li>
-                <li>Successfully imported: <span className="font-semibold text-green-600">{importResult.imported}</span></li>
-                <li>Failed rows: <span className="font-semibold text-red-600">{importResult.errors.length}</span></li>
+              <ul className="text-xs text-gray-600 dark:text-slate-350 space-y-1">
+                <li>Total rows processed: <span className="font-semibold text-gray-800 dark:text-slate-200">{importResult.total_rows}</span></li>
+                <li>Successfully imported: <span className="font-semibold text-green-600 dark:text-green-400">{importResult.imported}</span></li>
+                <li>Failed rows: <span className="font-semibold text-red-600 dark:text-red-400">{importResult.errors.length}</span></li>
               </ul>
               {importResult.errors.length > 0 && (
-                <div className="max-h-36 overflow-y-auto space-y-1.5 border-t border-gray-200 pt-3">
-                  <span className="text-[10px] font-bold text-red-500 uppercase block tracking-wider">Row Errors:</span>
+                <div className="max-h-36 overflow-y-auto space-y-1.5 border-t border-gray-200 dark:border-slate-750 pt-3">
+                  <span className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase block tracking-wider">Row Errors:</span>
                   {importResult.errors.map((err, idx) => (
-                    <div key={idx} className="text-[10px] font-mono text-red-600 leading-normal">
+                    <div key={idx} className="text-[10px] font-mono text-red-650 dark:text-red-350 leading-normal">
                       Row {err.row}: {typeof err.errors === 'object' ? JSON.stringify(err.errors) : err.errors}
                     </div>
                   ))}
@@ -316,7 +359,7 @@ export function BankGuaranteePage() {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-gray-200 select-none">
+          <div className="flex justify-end gap-3 pt-3 border-t border-gray-200 dark:border-slate-850 select-none">
             <RMButton type="button" variant="outline" onClick={() => setImportOpen(false)} disabled={importing}>
               Cancel
             </RMButton>

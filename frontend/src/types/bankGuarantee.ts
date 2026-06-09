@@ -76,7 +76,7 @@ export interface BankGuaranteeFilters {
   issue_date_to?: string;
   expiry_date_from?: string;
   expiry_date_to?: string;
-  year?: number;
+  year?: number | 'all';
 }
 
 export type QuantityUnit = 'kg' | 'quintal';

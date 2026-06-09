@@ -15,7 +15,16 @@ class BankGuaranteeFilter(django_filters.FilterSet):
     issue_date_to = django_filters.DateFilter(field_name='issue_date', lookup_expr='lte')
     expiry_date_from = django_filters.DateFilter(field_name='expiry_date', lookup_expr='gte')
     expiry_date_to = django_filters.DateFilter(field_name='expiry_date', lookup_expr='lte')
-    year = django_filters.NumberFilter(field_name='issue_date', lookup_expr='year')
+    year = django_filters.CharFilter(method='filter_year')
+
+    def filter_year(self, queryset, name, value):
+        if value == 'all':
+            return queryset
+        try:
+            year_val = int(value)
+            return queryset.filter(issue_date__year=year_val)
+        except ValueError:
+            return queryset
 
     class Meta:
         model = BankGuarantee

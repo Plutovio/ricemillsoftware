@@ -7,11 +7,11 @@ export function AppSidebar() {
   const { user, logout } = useAuth();
   const { expiringSoonRecords } = useBankGuarantee();
 
-  const activeClass = "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-navy-50 text-navy-800 transition-colors";
-  const inactiveClass = "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:text-navy-800 hover:bg-gray-50 transition-colors";
+  const activeClass = "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-navy-50 text-navy-800 dark:bg-navy-950 dark:text-navy-205 transition-colors";
+  const inactiveClass = "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 dark:text-slate-400 hover:text-navy-800 dark:hover:text-navy-200 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors";
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col justify-between select-none">
+    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 h-screen flex flex-col justify-between select-none transition-colors duration-250">
       <div className="flex flex-col flex-1 p-4">
         {/* Brand Header */}
         <div className="flex items-center gap-3 px-2 py-4 mb-6">
@@ -19,8 +19,8 @@ export function AppSidebar() {
             R
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-gray-900 leading-none">Rice Mill ERP</h1>
-            <span className="text-[10px] text-gray-500 font-medium tracking-wider uppercase">Management Suite</span>
+            <h1 className="text-sm font-semibold text-gray-900 dark:text-white leading-none">Rice Mill ERP</h1>
+            <span className="text-[10px] text-gray-500 dark:text-slate-500 font-medium tracking-wider uppercase">Management Suite</span>
           </div>
         </div>
 
@@ -54,19 +54,19 @@ export function AppSidebar() {
       </div>
 
       {/* User Info & Logout */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 dark:border-slate-800">
         <div className="flex items-center gap-3 px-2 py-3 mb-3">
-          <div className="w-9 h-9 rounded-full bg-navy-100 flex items-center justify-center text-navy-800 font-semibold text-sm">
+          <div className="w-9 h-9 rounded-full bg-navy-100 dark:bg-navy-950 flex items-center justify-center text-navy-800 dark:text-navy-200 font-semibold text-sm">
             {user?.username?.[0]?.toUpperCase() || 'U'}
           </div>
           <div className="overflow-hidden">
-            <h2 className="text-xs font-semibold text-gray-900 truncate">{user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.username}</h2>
-            <span className="text-[10px] text-gray-500 font-mono truncate block">{user?.email || 'operator@ricemill.com'}</span>
+            <h2 className="text-xs font-semibold text-gray-900 dark:text-white truncate">{user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.username}</h2>
+            <span className="text-[10px] text-gray-500 dark:text-slate-450 font-mono truncate block">{user?.email || 'operator@ricemill.com'}</span>
           </div>
         </div>
         <button 
           onClick={logout}
-          className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-medium rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+          className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-medium rounded-lg text-red-600 hover:text-red-750 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

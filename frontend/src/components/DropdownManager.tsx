@@ -92,7 +92,7 @@ export function DropdownManager({ isOpen, onClose }: DropdownManagerProps) {
     <RMModal isOpen={isOpen} onClose={onClose} title="Manage Dropdown Options" size="lg">
       <div className="flex gap-6 min-h-[400px]">
         {/* Left Side: Category Selection Tabs */}
-        <div className="w-48 border-r border-gray-200 pr-4 flex flex-col gap-1 select-none">
+        <div className="w-48 border-r border-gray-200 dark:border-slate-800 pr-4 flex flex-col gap-1 select-none">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.key}
@@ -103,8 +103,8 @@ export function DropdownManager({ isOpen, onClose }: DropdownManagerProps) {
               }}
               className={`text-left px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
                 activeCategory === cat.key
-                  ? 'bg-navy-50 text-navy-800'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-navy-800'
+                  ? 'bg-navy-50 dark:bg-navy-950 text-navy-800 dark:text-navy-200'
+                  : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-navy-800 dark:hover:text-navy-200'
               }`}
             >
               {cat.label}
@@ -116,23 +116,23 @@ export function DropdownManager({ isOpen, onClose }: DropdownManagerProps) {
         <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-gray-800">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-white">
                 {activeCategoryConfig?.label} Options
               </h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-slate-400">
                 Add or remove options available in fields across the application.
               </p>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="p-2.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg">
+              <div className="p-2.5 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg">
                 {error}
               </div>
             )}
 
             {/* Add New Option Form */}
-            <form onSubmit={handleAdd} className="flex items-end gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <form onSubmit={handleAdd} className="flex items-end gap-3 bg-gray-50 dark:bg-slate-850 p-3 rounded-lg border border-gray-200 dark:border-slate-800 transition-colors">
               <div className="flex-1">
                 <RMInput
                   label={`New ${activeCategoryConfig?.label.slice(0, -1)}`}
@@ -161,38 +161,49 @@ export function DropdownManager({ isOpen, onClose }: DropdownManagerProps) {
             </form>
 
             {/* Options List */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden max-h-[250px] overflow-y-auto">
+            <div className="border border-gray-200 dark:border-slate-800 rounded-lg overflow-hidden max-h-[250px] overflow-y-auto transition-colors">
               {loading && options.length === 0 ? (
-                <div className="p-4 text-center text-xs text-gray-500 font-medium">
+                <div className="p-4 text-center text-xs text-gray-500 dark:text-slate-400 font-medium">
                   Loading options...
                 </div>
               ) : options.length === 0 ? (
-                <div className="p-6 text-center text-xs text-gray-400 font-medium bg-gray-50/50">
+                <div className="p-6 text-center text-xs text-gray-400 dark:text-slate-500 font-medium bg-gray-50/50 dark:bg-slate-950/10">
                   No options added yet.
                 </div>
               ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                    <tr className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-800 text-[10px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                       <th className="px-4 py-2">Value</th>
                       {activeCategoryConfig?.hasIfsc && <th className="px-4 py-2">IFSC</th>}
                       <th className="px-4 py-2 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
                     {options.map((opt) => (
-                      <tr key={opt.id} className="text-xs hover:bg-gray-50/50">
-                        <td className="px-4 py-2.5 font-medium text-gray-800">{opt.value}</td>
+                      <tr key={opt.id} className="text-xs hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-slate-200">{opt.value}</td>
                         {activeCategoryConfig?.hasIfsc && (
-                          <td className="px-4 py-2.5 font-mono text-gray-600">
-                            {opt.meta?.ifsc || '—'}
+                          <td className="px-4 py-2.5 font-mono text-gray-600 dark:text-slate-350">
+                            {(() => {
+                              if (!opt.meta) return '—';
+                              let metaObj = opt.meta;
+                              if (typeof metaObj === 'string') {
+                                try {
+                                  metaObj = JSON.parse(metaObj);
+                                } catch {
+                                  return '—';
+                                }
+                              }
+                              return (metaObj as any)?.ifsc || '—';
+                            })()}
                           </td>
                         )}
                         <td className="px-4 py-2.5 text-right">
                           <button
                             type="button"
                             onClick={() => handleDelete(opt.id)}
-                            className="text-red-500 hover:text-red-700 font-medium transition-colors"
+                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
                           >
                             Delete
                           </button>
@@ -205,7 +216,7 @@ export function DropdownManager({ isOpen, onClose }: DropdownManagerProps) {
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-4 mt-6 flex justify-end">
+          <div className="border-t border-gray-200 dark:border-slate-800 pt-4 mt-6 flex justify-end">
             <RMButton variant="outline" onClick={onClose}>
               Close
             </RMButton>
