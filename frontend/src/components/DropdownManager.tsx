@@ -13,7 +13,7 @@ interface DropdownManagerProps {
 const CATEGORIES: { key: DropdownCategory; label: string; hasIfsc: boolean }[] = [
   { key: 'bank_name', label: 'Banks', hasIfsc: false },
   { key: 'branch_name', label: 'Branches', hasIfsc: true },
-  { key: 'account_no', label: 'Account Numbers', hasIfsc: false },
+  { key: 'debit_account_no', label: 'Debit Accounts', hasIfsc: false },
   { key: 'department', label: 'Departments', hasIfsc: false },
   { key: 'account_no_of_cheque', label: 'Cheque Accounts', hasIfsc: false },
 ];

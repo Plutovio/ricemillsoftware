@@ -9,6 +9,6 @@ export interface DropdownOption {
 export type DropdownCategory = 
   | 'bank_name' 
   | 'branch_name' 
-  | 'account_no' 
+  | 'debit_account_no' 
   | 'department' 
   | 'account_no_of_cheque';

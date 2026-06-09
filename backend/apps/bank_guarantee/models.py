@@ -25,16 +25,29 @@ class BankGuarantee(BaseModel):
     bank_name = models.CharField(max_length=255)
     branch_name = models.CharField(max_length=255)
     ifsc_code = models.CharField(max_length=20)
-    account_no = models.CharField(max_length=50)
+    debit_account_no = models.CharField(max_length=50)
+    bg_account_no = models.CharField(max_length=50, blank=True, null=True)
+    payment_mode = models.CharField(max_length=20, default='cheque')
     department = models.CharField(max_length=255)
     bg_number = models.CharField(max_length=100, unique=True)
     amount_of_bg = models.DecimalField(max_digits=15, decimal_places=2)
     issue_date = models.DateField()
     expiry_date = models.DateField()
+    # Cheque payment mode details
     cheque_number = models.CharField(max_length=100, blank=True, null=True)
     date_of_issue_of_cheque = models.DateField(blank=True, null=True)
     bank_name_of_cheque = models.CharField(max_length=255, blank=True, null=True)
     account_no_of_cheque = models.CharField(max_length=50, blank=True, null=True)
+    # Online payment mode details
+    online_transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    online_transaction_date = models.DateField(blank=True, null=True)
+    online_payment_mode = models.CharField(max_length=50, blank=True, null=True)
+    online_bank_name = models.CharField(max_length=255, blank=True, null=True)
+    # PDC Cheque details
+    pdc_cheque_number = models.CharField(max_length=100, blank=True, null=True)
+    pdc_date_of_issue_of_cheque = models.DateField(blank=True, null=True)
+    pdc_bank_name_of_cheque = models.CharField(max_length=255, blank=True, null=True)
+    pdc_account_no_of_cheque = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
         ordering = ['-issue_date', '-created_at']

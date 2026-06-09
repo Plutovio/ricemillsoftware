@@ -20,21 +20,37 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
   const [bankName, setBankName] = useState('');
   const [branchName, setBranchName] = useState('');
   const [ifscCode, setIfscCode] = useState('');
-  const [accountNo, setAccountNo] = useState('');
+  const [debitAccountNo, setDebitAccountNo] = useState('');
+  const [bgAccountNo, setBgAccountNo] = useState('');
+  const [paymentMode, setPaymentMode] = useState('cheque');
   const [department, setDepartment] = useState('');
   const [bgNumber, setBgNumber] = useState('');
   const [amountOfBg, setAmountOfBg] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+
+  // Regular Cheque details
   const [chequeNumber, setChequeNumber] = useState('');
   const [dateOfIssueOfCheque, setDateOfIssueOfCheque] = useState('');
   const [bankNameOfCheque, setBankNameOfCheque] = useState('');
   const [accountNoOfCheque, setAccountNoOfCheque] = useState('');
 
+  // Online Payment details
+  const [onlineTransactionId, setOnlineTransactionId] = useState('');
+  const [onlineTransactionDate, setOnlineTransactionDate] = useState('');
+  const [onlinePaymentMode, setOnlinePaymentMode] = useState('');
+  const [onlineBankName, setOnlineBankName] = useState('');
+
+  // PDC Cheque details
+  const [pdcChequeNumber, setPdcChequeNumber] = useState('');
+  const [pdcDateOfIssueOfCheque, setPdcDateOfIssueOfCheque] = useState('');
+  const [pdcBankNameOfCheque, setPdcBankNameOfCheque] = useState('');
+  const [pdcAccountNoOfCheque, setPdcAccountNoOfCheque] = useState('');
+
   // Dropdown list options
   const [banks, setBanks] = useState<DropdownOption[]>([]);
   const [branches, setBranches] = useState<DropdownOption[]>([]);
-  const [accounts, setAccounts] = useState<DropdownOption[]>([]);
+  const [debitAccounts, setDebitAccounts] = useState<DropdownOption[]>([]);
   const [departments, setDepartments] = useState<DropdownOption[]>([]);
   const [chequeAccounts, setChequeAccounts] = useState<DropdownOption[]>([]);
 
@@ -50,7 +66,7 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
         const [rBanks, rBranches, rAccounts, rDepts, rChqAccs] = await Promise.all([
           dropdownApi.fetchOptions('bank_name'),
           dropdownApi.fetchOptions('branch_name'),
-          dropdownApi.fetchOptions('account_no'),
+          dropdownApi.fetchOptions('debit_account_no'),
           dropdownApi.fetchOptions('department'),
           dropdownApi.fetchOptions('account_no_of_cheque'),
         ]);
@@ -59,7 +75,7 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
 
         setBanks(extract(rBanks));
         setBranches(extract(rBranches));
-        setAccounts(extract(rAccounts));
+        setDebitAccounts(extract(rAccounts));
         setDepartments(extract(rDepts));
         setChequeAccounts(extract(rChqAccs));
       } catch {
@@ -77,16 +93,32 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
       setBankName(record.bank_name);
       setBranchName(record.branch_name);
       setIfscCode(record.ifsc_code);
-      setAccountNo(record.account_no);
+      setDebitAccountNo(record.debit_account_no);
+      setBgAccountNo(record.bg_account_no || '');
+      setPaymentMode(record.payment_mode || 'cheque');
       setDepartment(record.department);
       setBgNumber(record.bg_number);
       setAmountOfBg(record.amount_of_bg);
       setIssueDate(record.issue_date);
       setExpiryDate(record.expiry_date);
+
+      // Cheque
       setChequeNumber(record.cheque_number || '');
       setDateOfIssueOfCheque(record.date_of_issue_of_cheque || '');
       setBankNameOfCheque(record.bank_name_of_cheque || '');
       setAccountNoOfCheque(record.account_no_of_cheque || '');
+
+      // Online
+      setOnlineTransactionId(record.online_transaction_id || '');
+      setOnlineTransactionDate(record.online_transaction_date || '');
+      setOnlinePaymentMode(record.online_payment_mode || '');
+      setOnlineBankName(record.online_bank_name || '');
+
+      // PDC
+      setPdcChequeNumber(record.pdc_cheque_number || '');
+      setPdcDateOfIssueOfCheque(record.pdc_date_of_issue_of_cheque || '');
+      setPdcBankNameOfCheque(record.pdc_bank_name_of_cheque || '');
+      setPdcAccountNoOfCheque(record.pdc_account_no_of_cheque || '');
     }
   }, [record]);
 
@@ -123,16 +155,29 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
         bank_name: bankName,
         branch_name: branchName,
         ifsc_code: ifscCode,
-        account_no: accountNo,
+        debit_account_no: debitAccountNo,
+        bg_account_no: bgAccountNo,
+        payment_mode: paymentMode,
         department: department,
         bg_number: bgNumber,
         amount_of_bg: amountOfBg,
         issue_date: issueDate,
         expiry_date: expiryDate,
-        cheque_number: chequeNumber || '',
-        date_of_issue_of_cheque: dateOfIssueOfCheque || '',
-        bank_name_of_cheque: bankNameOfCheque || '',
-        account_no_of_cheque: accountNoOfCheque || '',
+        // Regular Cheque fields
+        cheque_number: paymentMode === 'cheque' ? chequeNumber : '',
+        date_of_issue_of_cheque: paymentMode === 'cheque' ? dateOfIssueOfCheque : '',
+        bank_name_of_cheque: paymentMode === 'cheque' ? bankNameOfCheque : '',
+        account_no_of_cheque: paymentMode === 'cheque' ? accountNoOfCheque : '',
+        // Online details
+        online_transaction_id: paymentMode === 'online' ? onlineTransactionId : '',
+        online_transaction_date: paymentMode === 'online' ? onlineTransactionDate : '',
+        online_payment_mode: paymentMode === 'online' ? onlinePaymentMode : '',
+        online_bank_name: paymentMode === 'online' ? onlineBankName : '',
+        // PDC Cheque fields
+        pdc_cheque_number: pdcChequeNumber,
+        pdc_date_of_issue_of_cheque: pdcDateOfIssueOfCheque,
+        pdc_bank_name_of_cheque: pdcBankNameOfCheque,
+        pdc_account_no_of_cheque: pdcAccountNoOfCheque,
       };
       await onSubmit(payload);
     } catch (err: any) {
@@ -184,13 +229,21 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
           />
 
           <RMSelect
-            label="Account Number"
-            value={accountNo}
-            onChange={(e) => setAccountNo(e.target.value)}
+            label="Debit Account Number"
+            value={debitAccountNo}
+            onChange={(e) => setDebitAccountNo(e.target.value)}
             disabled={loadingDropdowns}
             required
-            placeholder="Select Account"
-            options={accounts.map(a => ({ value: a.value, label: a.value }))}
+            placeholder="Select Debit Account"
+            options={debitAccounts.map(a => ({ value: a.value, label: a.value }))}
+          />
+
+          <RMInput
+            label="BG Account Number"
+            placeholder="e.g. BG-908123"
+            value={bgAccountNo}
+            onChange={(e) => setBgAccountNo(e.target.value)}
+            required
           />
 
           <RMSelect
@@ -272,34 +325,136 @@ export function BankGuaranteeForm({ record, onSubmit, onCancel }: BankGuaranteeF
         </div>
       </div>
 
-      {/* Cheque / Security Info */}
-      <div>
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Cheque Details (Security)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Payment Details (Cheque / Online) */}
+      <div className="border-t border-gray-100 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Guarantee Payment Details</h3>
+          {/* Segmented Control Mode Toggle */}
+          <div className="flex rounded-lg border border-gray-200 p-0.5 bg-gray-50 w-48">
+            <button
+              type="button"
+              className={`flex-1 py-1 text-[11px] font-bold rounded-md transition-all select-none ${
+                paymentMode === 'cheque'
+                  ? 'bg-white text-navy-800 shadow-sm border border-gray-150 font-semibold'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+              onClick={() => setPaymentMode('cheque')}
+            >
+              Cheque
+            </button>
+            <button
+              type="button"
+              className={`flex-1 py-1 text-[11px] font-bold rounded-md transition-all select-none ${
+                paymentMode === 'online'
+                  ? 'bg-white text-navy-800 shadow-sm border border-gray-150 font-semibold'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+              onClick={() => setPaymentMode('online')}
+            >
+              Online
+            </button>
+          </div>
+        </div>
+
+        {paymentMode === 'cheque' ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-150">
+            <RMInput
+              label="Cheque Number"
+              placeholder="e.g. 102345"
+              value={chequeNumber}
+              onChange={(e) => setChequeNumber(e.target.value)}
+              required={paymentMode === 'cheque'}
+            />
+
+            <RMDatePicker
+              label="Cheque Issue Date"
+              value={dateOfIssueOfCheque}
+              onChange={(e) => setDateOfIssueOfCheque(e.target.value)}
+              required={paymentMode === 'cheque'}
+            />
+
+            <RMInput
+              label="Cheque Bank Name"
+              placeholder="e.g. State Bank of India"
+              value={bankNameOfCheque}
+              onChange={(e) => setBankNameOfCheque(e.target.value)}
+              required={paymentMode === 'cheque'}
+            />
+
+            <RMSelect
+              label="Cheque Account Number"
+              value={accountNoOfCheque}
+              onChange={(e) => setAccountNoOfCheque(e.target.value)}
+              disabled={loadingDropdowns}
+              placeholder="Select Account"
+              options={chequeAccounts.map(a => ({ value: a.value, label: a.value }))}
+              required={paymentMode === 'cheque'}
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-150">
+            <RMInput
+              label="Transaction ID / Ref"
+              placeholder="e.g. TXN987654321"
+              value={onlineTransactionId}
+              onChange={(e) => setOnlineTransactionId(e.target.value)}
+              required={paymentMode === 'online'}
+            />
+
+            <RMDatePicker
+              label="Transfer Date"
+              value={onlineTransactionDate}
+              onChange={(e) => setOnlineTransactionDate(e.target.value)}
+              required={paymentMode === 'online'}
+            />
+
+            <RMInput
+              label="Payment Mode / Channel"
+              placeholder="e.g. IMPS / RTGS / UPI"
+              value={onlinePaymentMode}
+              onChange={(e) => setOnlinePaymentMode(e.target.value)}
+              required={paymentMode === 'online'}
+            />
+
+            <RMInput
+              label="Initiating Bank Name"
+              placeholder="e.g. ICICI Bank"
+              value={onlineBankName}
+              onChange={(e) => setOnlineBankName(e.target.value)}
+              required={paymentMode === 'online'}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* PDC Cheque Details (Security) */}
+      <div className="border-t border-gray-100 pt-6">
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">PDC Cheque Details (Security)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-navy-50/30 rounded-xl border border-navy-100/50">
           <RMInput
-            label="Cheque Number"
-            placeholder="e.g. 102345"
-            value={chequeNumber}
-            onChange={(e) => setChequeNumber(e.target.value)}
+            label="PDC Cheque Number"
+            placeholder="e.g. 991234"
+            value={pdcChequeNumber}
+            onChange={(e) => setPdcChequeNumber(e.target.value)}
           />
 
           <RMDatePicker
-            label="Cheque Issue Date"
-            value={dateOfIssueOfCheque}
-            onChange={(e) => setDateOfIssueOfCheque(e.target.value)}
+            label="PDC Cheque Issue Date"
+            value={pdcDateOfIssueOfCheque}
+            onChange={(e) => setPdcDateOfIssueOfCheque(e.target.value)}
           />
 
           <RMInput
-            label="Cheque Bank Name"
-            placeholder="e.g. State Bank of India"
-            value={bankNameOfCheque}
-            onChange={(e) => setBankNameOfCheque(e.target.value)}
+            label="PDC Bank Name"
+            placeholder="e.g. Punjab National Bank"
+            value={pdcBankNameOfCheque}
+            onChange={(e) => setPdcBankNameOfCheque(e.target.value)}
           />
 
           <RMSelect
-            label="Cheque Account Number"
-            value={accountNoOfCheque}
-            onChange={(e) => setAccountNoOfCheque(e.target.value)}
+            label="PDC Account Number"
+            value={pdcAccountNoOfCheque}
+            onChange={(e) => setPdcAccountNoOfCheque(e.target.value)}
             disabled={loadingDropdowns}
             placeholder="Select Account"
             options={chequeAccounts.map(a => ({ value: a.value, label: a.value }))}

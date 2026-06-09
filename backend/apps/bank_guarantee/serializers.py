@@ -19,10 +19,19 @@ class BankGuaranteeSerializer(serializers.ModelSerializer):
     class Meta:
         model = BankGuarantee
         fields = [
-            'id', 'bank_name', 'branch_name', 'ifsc_code', 'account_no',
+            'id', 'bank_name', 'branch_name', 'ifsc_code', 
+            'debit_account_no', 'bg_account_no', 'payment_mode',
             'department', 'bg_number', 'amount_of_bg', 'issue_date',
-            'expiry_date', 'cheque_number', 'date_of_issue_of_cheque',
+            'expiry_date',
+            # Cheque details
+            'cheque_number', 'date_of_issue_of_cheque',
             'bank_name_of_cheque', 'account_no_of_cheque',
+            # Online details
+            'online_transaction_id', 'online_transaction_date',
+            'online_payment_mode', 'online_bank_name',
+            # PDC details
+            'pdc_cheque_number', 'pdc_date_of_issue_of_cheque',
+            'pdc_bank_name_of_cheque', 'pdc_account_no_of_cheque',
             # Computed fields
             'no_of_days', 'pdc', 'total_amount', 'quantity',
             # Timestamps

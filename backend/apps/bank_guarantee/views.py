@@ -52,16 +52,29 @@ class BankGuaranteeViewSet(viewsets.ModelViewSet):
         'bank_name': ['bank_name', 'bank name', 'bankname', 'bank'],
         'branch_name': ['branch_name', 'branch name', 'branchname', 'branch'],
         'ifsc_code': ['ifsc_code', 'ifsc code', 'ifsccode', 'ifsc'],
-        'account_no': ['account_no', 'account no', 'accountno', 'account number', 'account_number', 'acc no', 'acc_no'],
+        'debit_account_no': ['debit_account_no', 'debit account no', 'debit account number', 'debit acc no', 'debit_acc_no', 'account_no', 'account no', 'accountno', 'account number', 'account_number', 'acc no', 'acc_no'],
+        'bg_account_no': ['bg_account_no', 'bg account no', 'bg account number', 'bg acc no', 'bg_acc_no'],
+        'payment_mode': ['payment_mode', 'payment mode', 'mode of payment', 'paymentmode'],
         'department': ['department', 'dept', 'dept.'],
         'bg_number': ['bg_number', 'bg number', 'bgnumber', 'bg no', 'bg_no', 'bank guarantee number', 'bank_guarantee_number', 'bank guarantee no'],
         'amount_of_bg': ['amount_of_bg', 'amount of bg', 'amountofbg', 'amount', 'bg amount', 'amount of bank guarantee'],
         'issue_date': ['issue_date', 'issue date', 'issuedate', 'date of issue'],
         'expiry_date': ['expiry_date', 'expiry date', 'expirydate', 'expiry', 'date of expiry'],
+        # Cheque fields
         'cheque_number': ['cheque_number', 'cheque number', 'chequenumber', 'cheque no', 'cheque_no'],
         'date_of_issue_of_cheque': ['date_of_issue_of_cheque', 'date of issue of cheque', 'cheque date', 'cheque issue date'],
         'bank_name_of_cheque': ['bank_name_of_cheque', 'bank name of cheque', 'cheque bank', 'cheque bank name'],
         'account_no_of_cheque': ['account_no_of_cheque', 'account no of cheque', 'cheque account', 'cheque account no', 'cheque acc no'],
+        # Online fields
+        'online_transaction_id': ['online_transaction_id', 'online transaction id', 'transaction id', 'txn id', 'transaction no', 'online_txn_id'],
+        'online_transaction_date': ['online_transaction_date', 'online transaction date', 'transaction date', 'txn date', 'online_txn_date'],
+        'online_payment_mode': ['online_payment_mode', 'online payment mode', 'online mode', 'online payment channel'],
+        'online_bank_name': ['online_bank_name', 'online bank name', 'online bank'],
+        # PDC fields
+        'pdc_cheque_number': ['pdc_cheque_number', 'pdc cheque number', 'pdc cheque no', 'pdc number', 'pdc no'],
+        'pdc_date_of_issue_of_cheque': ['pdc_date_of_issue_of_cheque', 'pdc date of issue of cheque', 'pdc cheque date', 'pdc issue date', 'pdc cheque issue date'],
+        'pdc_bank_name_of_cheque': ['pdc_bank_name_of_cheque', 'pdc bank name of cheque', 'pdc bank', 'pdc bank name'],
+        'pdc_account_no_of_cheque': ['pdc_account_no_of_cheque', 'pdc account no of cheque', 'pdc cheque account', 'pdc cheque account no', 'pdc cheque acc no'],
     }
 
     def _normalize_header(self, header):
@@ -133,7 +146,7 @@ class BankGuaranteeViewSet(viewsets.ModelViewSet):
                     mapped_row['amount_of_bg'] = Decimal(str(mapped_row['amount_of_bg']))
 
                 # Handle date fields
-                for date_field in ['issue_date', 'expiry_date', 'date_of_issue_of_cheque']:
+                for date_field in ['issue_date', 'expiry_date', 'date_of_issue_of_cheque', 'online_transaction_date', 'pdc_date_of_issue_of_cheque']:
                     if date_field in mapped_row and mapped_row[date_field]:
                         val = mapped_row[date_field]
                         if hasattr(val, 'date'):
@@ -156,9 +169,27 @@ class BankGuaranteeViewSet(viewsets.ModelViewSet):
                         pass  # Required fields, will be caught by serializer
 
                 # Handle nullable fields
-                for nullable in ['cheque_number', 'date_of_issue_of_cheque', 'bank_name_of_cheque', 'account_no_of_cheque']:
+                for nullable in [
+                    'cheque_number', 'date_of_issue_of_cheque', 'bank_name_of_cheque', 'account_no_of_cheque',
+                    'online_transaction_id', 'online_transaction_date', 'online_payment_mode', 'online_bank_name',
+                    'pdc_cheque_number', 'pdc_date_of_issue_of_cheque', 'pdc_bank_name_of_cheque', 'pdc_account_no_of_cheque'
+                ]:
                     if nullable in mapped_row and (mapped_row[nullable] is None or str(mapped_row[nullable]).strip() == ''):
                         mapped_row[nullable] = None
+
+                # Adjust based on payment mode
+                if 'payment_mode' not in mapped_row or not mapped_row['payment_mode']:
+                    if mapped_row.get('online_transaction_id') or mapped_row.get('online_bank_name'):
+                        mapped_row['payment_mode'] = 'online'
+                    else:
+                        mapped_row['payment_mode'] = 'cheque'
+
+                if mapped_row.get('payment_mode') == 'online':
+                    for f in ['cheque_number', 'date_of_issue_of_cheque', 'bank_name_of_cheque', 'account_no_of_cheque']:
+                        mapped_row[f] = None
+                elif mapped_row.get('payment_mode') == 'cheque':
+                    for f in ['online_transaction_id', 'online_transaction_date', 'online_payment_mode', 'online_bank_name']:
+                        mapped_row[f] = None
 
                 serializer = BankGuaranteeSerializer(data=mapped_row)
                 if serializer.is_valid():
@@ -187,10 +218,12 @@ class BankGuaranteeViewSet(viewsets.ModelViewSet):
 
         # Header row
         headers = [
-            'Bank Name', 'Branch Name', 'IFSC Code', 'Account No.', 'Department',
+            'Bank Name', 'Branch Name', 'IFSC Code', 'Debit Account No.', 'BG Account No.', 'Payment Mode', 'Department',
             'BG Number', 'Amount of BG', 'PDC', 'Total Amount', 'Quantity (kg)',
             'Issue Date', 'Expiry Date', 'No. of Days',
             'Cheque Number', 'Date of Issue of Cheque', 'Bank Name of Cheque', 'Account No. of Cheque',
+            'Online Txn ID', 'Online Txn Date', 'Online Payment Mode', 'Online Bank Name',
+            'PDC Cheque Number', 'PDC Cheque Issue Date', 'PDC Bank Name', 'PDC Cheque Account No.'
         ]
         ws.append(headers)
 
@@ -202,7 +235,7 @@ class BankGuaranteeViewSet(viewsets.ModelViewSet):
         # Data rows
         for bg in queryset:
             ws.append([
-                bg.bank_name, bg.branch_name, bg.ifsc_code, bg.account_no, bg.department,
+                bg.bank_name, bg.branch_name, bg.ifsc_code, bg.debit_account_no, bg.bg_account_no or '', bg.payment_mode, bg.department,
                 bg.bg_number, float(bg.amount_of_bg), float(bg.pdc), float(bg.total_amount), bg.quantity,
                 bg.issue_date.isoformat() if bg.issue_date else '',
                 bg.expiry_date.isoformat() if bg.expiry_date else '',
@@ -211,6 +244,14 @@ class BankGuaranteeViewSet(viewsets.ModelViewSet):
                 bg.date_of_issue_of_cheque.isoformat() if bg.date_of_issue_of_cheque else '',
                 bg.bank_name_of_cheque or '',
                 bg.account_no_of_cheque or '',
+                bg.online_transaction_id or '',
+                bg.online_transaction_date.isoformat() if bg.online_transaction_date else '',
+                bg.online_payment_mode or '',
+                bg.online_bank_name or '',
+                bg.pdc_cheque_number or '',
+                bg.pdc_date_of_issue_of_cheque.isoformat() if bg.pdc_date_of_issue_of_cheque else '',
+                bg.pdc_bank_name_of_cheque or '',
+                bg.pdc_account_no_of_cheque or '',
             ])
 
         # Auto-adjust column widths

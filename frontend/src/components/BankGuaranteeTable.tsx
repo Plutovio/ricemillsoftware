@@ -26,7 +26,9 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
     { key: 'bank_name', label: 'Bank Name', sortable: true },
     { key: 'branch_name', label: 'Branch Name', sortable: true },
     { key: 'ifsc_code', label: 'IFSC Code', sortable: false },
-    { key: 'account_no', label: 'Account No.', sortable: false },
+    { key: 'debit_account_no', label: 'Debit Account No.', sortable: false },
+    { key: 'bg_account_no', label: 'BG Account No.', sortable: false },
+    { key: 'payment_mode', label: 'Payment Mode', sortable: false },
     { key: 'department', label: 'Department', sortable: true },
     { key: 'amount_of_bg', label: 'Amount of BG', sortable: true },
     { key: 'pdc', label: 'PDC', sortable: false },
@@ -35,10 +37,16 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
     { key: 'issue_date', label: 'Issue Date', sortable: true },
     { key: 'expiry_date', label: 'Expiry Date', sortable: true },
     { key: 'no_of_days', label: 'No. of Days', sortable: false },
-    { key: 'cheque_number', label: 'Cheque Number', sortable: false },
-    { key: 'date_of_issue_of_cheque', label: 'Cheque Date', sortable: false },
-    { key: 'bank_name_of_cheque', label: 'Cheque Bank', sortable: false },
-    { key: 'account_no_of_cheque', label: 'Cheque Account', sortable: false },
+    // Cheque/Online details
+    { key: 'cheque_number', label: 'Cheque/Txn No.', sortable: false },
+    { key: 'date_of_issue_of_cheque', label: 'Cheque/Txn Date', sortable: false },
+    { key: 'bank_name_of_cheque', label: 'Cheque Bank/Online Mode', sortable: false },
+    { key: 'account_no_of_cheque', label: 'Cheque Account/Online Bank', sortable: false },
+    // PDC Cheque details
+    { key: 'pdc_cheque_number', label: 'PDC Cheque No.', sortable: false },
+    { key: 'pdc_date_of_issue_of_cheque', label: 'PDC Cheque Date', sortable: false },
+    { key: 'pdc_bank_name_of_cheque', label: 'PDC Cheque Bank', sortable: false },
+    { key: 'pdc_account_no_of_cheque', label: 'PDC Cheque Account', sortable: false },
   ];
 
   const handleSort = (key: string) => {
@@ -97,7 +105,7 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
       {/* Table Container with Horizontal Scroll */}
       <div className="table-container shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[1800px]">
+          <table className="w-full text-left border-collapse min-w-[2200px]">
             <thead>
               <tr className="bg-gray-100 border-b border-gray-200 text-xs font-bold text-gray-700 uppercase select-none">
                 <th className="px-4 py-3 border-r border-gray-200">Actions</th>
@@ -120,13 +128,13 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
             <tbody className="divide-y divide-gray-200 bg-white">
               {loading && records.length === 0 ? (
                 <tr>
-                  <td colSpan={18} className="px-6 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={24} className="px-6 py-10 text-center text-sm text-gray-500">
                     Loading bank guarantees...
                   </td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
-                  <td colSpan={18} className="px-6 py-10 text-center text-sm text-gray-400">
+                  <td colSpan={24} className="px-6 py-10 text-center text-sm text-gray-400">
                     No bank guarantee records found for this year or filter criteria.
                   </td>
                 </tr>
@@ -164,7 +172,19 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
                       {bg.ifsc_code}
                     </td>
                     <td className="px-4 py-3 font-mono text-gray-600 border-r border-gray-200">
-                      {bg.account_no}
+                      {bg.debit_account_no}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-gray-600 border-r border-gray-200">
+                      {bg.bg_account_no || '—'}
+                    </td>
+                    <td className="px-4 py-3 border-r border-gray-200 select-none">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                        bg.payment_mode === 'online'
+                          ? 'bg-green-50 text-green-700 border border-green-100'
+                          : 'bg-blue-50 text-blue-700 border border-blue-100'
+                      }`}>
+                        {bg.payment_mode || 'cheque'}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600 border-r border-gray-200">
                       {bg.department}
@@ -193,17 +213,31 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
                     <td className="px-4 py-3 font-mono text-right text-gray-600 border-r border-gray-200">
                       {bg.no_of_days}
                     </td>
+                    {/* Cheque / Online Details */}
                     <td className="px-4 py-3 font-mono text-gray-500 border-r border-gray-200">
-                      {bg.cheque_number || '—'}
+                      {bg.payment_mode === 'online' ? (bg.online_transaction_id || '—') : (bg.cheque_number || '—')}
                     </td>
                     <td className="px-4 py-3 font-mono text-gray-500 border-r border-gray-200">
-                      {formatDate(bg.date_of_issue_of_cheque)}
+                      {bg.payment_mode === 'online' ? formatDate(bg.online_transaction_date) : formatDate(bg.date_of_issue_of_cheque)}
                     </td>
                     <td className="px-4 py-3 text-gray-500 border-r border-gray-200">
-                      {bg.bank_name_of_cheque || '—'}
+                      {bg.payment_mode === 'online' ? (bg.online_payment_mode || '—') : (bg.bank_name_of_cheque || '—')}
                     </td>
                     <td className="px-4 py-3 font-mono text-gray-500 border-r border-gray-200">
-                      {bg.account_no_of_cheque || '—'}
+                      {bg.payment_mode === 'online' ? (bg.online_bank_name || '—') : (bg.account_no_of_cheque || '—')}
+                    </td>
+                    {/* PDC Cheque Details */}
+                    <td className="px-4 py-3 font-mono text-gray-500 border-r border-gray-200">
+                      {bg.pdc_cheque_number || '—'}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-gray-500 border-r border-gray-200">
+                      {formatDate(bg.pdc_date_of_issue_of_cheque)}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 border-r border-gray-200">
+                      {bg.pdc_bank_name_of_cheque || '—'}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-gray-500 border-r border-gray-200 font-semibold text-gray-800">
+                      {bg.pdc_account_no_of_cheque || '—'}
                     </td>
                   </tr>
                 ))
