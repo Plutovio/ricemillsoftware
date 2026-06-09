@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from apps.bank_guarantee.models import DropdownOption, BankGuarantee
+from django.contrib.auth.models import User
 from decimal import Decimal
 from datetime import date, timedelta
 
@@ -10,6 +11,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write('Seeding dropdown options...')
         self._seed_dropdowns()
+        self.stdout.write('Seeding default operator user...')
+        self._seed_user()
         self.stdout.write('Seeding Bank Guarantee records...')
         self._seed_bank_guarantees()
         self.stdout.write(self.style.SUCCESS('Successfully seeded database!'))
@@ -56,6 +59,22 @@ class Command(BaseCommand):
             DropdownOption.objects.create(category='account_no_of_cheque', value=acc)
 
         self.stdout.write(f'  Created {DropdownOption.objects.count()} dropdown options')
+
+    def _seed_user(self):
+        # Create a default operator account if it doesn't exist
+        if not User.objects.filter(username='operator').exists():
+            User.objects.create_user(
+                username='operator',
+                email='operator@ricemill.com',
+                password='password123'
+            )
+            self.stdout.write('  Created default user: operator / password123')
+        else:
+            # Ensure the password matches password123 if user already exists
+            user = User.objects.get(username='operator')
+            user.set_password('password123')
+            user.save()
+            self.stdout.write('  Reset default user password to password123')
 
     def _seed_bank_guarantees(self):
         # Clear existing
