@@ -79,7 +79,7 @@ class BankGuarantee(BaseModel):
 
     @property
     def quantity(self):
-        """Quantity = Total Amount / 2500 (in kg)."""
+        """Quantity = Total Amount / 2500 (in quintals)."""
         if self.total_amount:
             result = self.total_amount / Decimal('2500')
             return float(result.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))

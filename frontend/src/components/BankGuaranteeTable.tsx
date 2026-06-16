@@ -25,7 +25,7 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
   const totalAmountOfBg = records.reduce((sum, r) => sum + (parseFloat(String(r.amount_of_bg)) || 0), 0);
   const totalPdc = records.reduce((sum, r) => sum + (parseFloat(String(r.pdc)) || 0), 0);
   const totalTotalAmount = records.reduce((sum, r) => sum + (parseFloat(String(r.total_amount)) || 0), 0);
-  const totalQuantity = records.reduce((sum, r) => sum + (parseFloat(String(r.quantity)) || 0), 0);
+  const totalQuantity = records.reduce((sum, r) => sum + ((parseFloat(String(r.quantity)) || 0) * 100), 0);
 
   const columns = [
     { key: 'bg_number', label: 'BG Number', sortable: true },
@@ -205,7 +205,7 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
                       ₹ {formatCurrency(bg.total_amount)}
                     </td>
                     <td className="px-4 py-3 font-mono text-right text-gray-900 dark:text-slate-200 border-r border-gray-200 dark:border-slate-800 font-semibold">
-                      {convertQuantity(bg.quantity, quantityUnit).toLocaleString('en-IN', {
+                      {convertQuantity(bg.quantity * 100, quantityUnit).toLocaleString('en-IN', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}

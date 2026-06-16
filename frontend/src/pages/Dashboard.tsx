@@ -66,7 +66,7 @@ export function Dashboard() {
   const totalCount = yearRecords.length;
   const totalBgAmount = yearRecords.reduce((sum, r) => sum + parseFloat(r.amount_of_bg || '0'), 0);
   const totalPdcAmount = yearRecords.reduce((sum, r) => sum + parseFloat(r.pdc || '0'), 0);
-  const totalQuantityKg = yearRecords.reduce((sum, r) => sum + (r.quantity || 0), 0);
+  const totalQuantityKg = yearRecords.reduce((sum, r) => sum + ((r.quantity || 0) * 100), 0);
   const convertedQty = convertQuantity(totalQuantityKg, quantityUnit);
 
   // Filter expired / expiring soon

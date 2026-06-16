@@ -523,7 +523,7 @@ export function KaantaParchiPage() {
               <div className="bg-emerald-50/40 dark:bg-slate-950/20 border border-emerald-100 dark:border-slate-800 p-4 rounded-xl">
                 <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wider block mb-1">BG Quota Cross-Reference</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400 font-mono">{formatCurrency(getConvertedVal(aggregateBgQuantity))}</span>
+                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400 font-mono">{formatCurrency(getConvertedVal(aggregateBgQuantity * 100))}</span>
                   <span className="text-xs text-gray-500 font-mono">{unitLabel}</span>
                 </div>
                 <p className="text-[9px] text-gray-500 dark:text-slate-500 font-medium mt-1">Total quantity active across all Bank Guarantees</p>
@@ -572,7 +572,7 @@ export function KaantaParchiPage() {
                         <td className="px-4 py-2">
                           <span className="px-2 py-0.5 rounded text-[10px] bg-gray-100 dark:bg-slate-800 dark:text-slate-200">{doObj.source}</span>
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-navy-800 dark:text-navy-200">{formatCurrency(getConvertedVal(doObj.aggregate_bg_quantity ?? 0))}</td>
+                        <td className="px-4 py-2 text-right font-mono text-navy-800 dark:text-navy-200">{formatCurrency(getConvertedVal((doObj.aggregate_bg_quantity ?? 0) * 100))}</td>
                         <td className="px-4 py-2 text-right font-mono">{formatCurrency(getConvertedVal(doObj.do_quantity_issued))}</td>
                         <td className="px-4 py-2 text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(getConvertedVal(doObj.total_quantity))}</td>
                         <td className="px-4 py-2 text-right font-mono text-blue-600 dark:text-blue-400">{formatCurrency(getConvertedVal(doObj.quantity_to_be_milled))}</td>
