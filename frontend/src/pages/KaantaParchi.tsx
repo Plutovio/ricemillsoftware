@@ -3,6 +3,7 @@ import { useDeliveryOrder } from '../context/DeliveryOrderContext';
 import { dropdownApi } from '../api/dropdownApi';
 import type { DropdownOption } from '../types/dropdown';
 import type {
+  DeliveryOrder,
   KaantaParchi as KPType,
   KaantaParchiFilters
 } from '../types/deliveryOrder';
@@ -33,6 +34,8 @@ export function KaantaParchiPage() {
     fetchKPs,
     fetchAggregateBgQuantity,
     createDO,
+    updateDO,
+    deleteDO,
     createKP,
     updateKP,
     deleteKP,
@@ -59,6 +62,7 @@ export function KaantaParchiPage() {
   // Collapsible DO section
   const [doPanelOpen, setDoPanelOpen] = useState(false);
   const [doFormOpen, setDoFormOpen] = useState(false);
+  const [editingDO, setEditingDO] = useState<DeliveryOrder | null>(null);
 
   // Kaanta Parchi Form Modal
   const [kpFormOpen, setKpFormOpen] = useState(false);
@@ -398,18 +402,50 @@ export function KaantaParchiPage() {
     }
 
     try {
-      await createDO({
-        do_number: newDoNumber.trim(),
-        do_date: newDoDate,
-        source: newDoSource,
-        do_quantity_issued: qty
-      });
+      if (editingDO) {
+        await updateDO(editingDO.id, {
+          do_number: newDoNumber.trim(),
+          do_date: newDoDate,
+          source: newDoSource,
+          do_quantity_issued: qty
+        });
+      } else {
+        await createDO({
+          do_number: newDoNumber.trim(),
+          do_date: newDoDate,
+          source: newDoSource,
+          do_quantity_issued: qty
+        });
+      }
       setNewDoNumber('');
       setNewDoQty('');
       setDoFormError('');
+      setEditingDO(null);
       setDoFormOpen(false);
     } catch (err: any) {
-      setDoFormError(err.message || 'Failed to create DO.');
+      setDoFormError(err.message || 'Failed to save DO.');
+    }
+  };
+
+  const handleOpenEditDoModal = (doObj: DeliveryOrder) => {
+    setEditingDO(doObj);
+    setNewDoNumber(doObj.do_number);
+    setNewDoDate(doObj.do_date);
+    setNewDoSource(doObj.source);
+    // Convert backend value (which is in kg) to active unit for editing
+    const qty = quantityUnit === 'quintal' ? parseFloat(String(doObj.do_quantity_issued)) / 100 : doObj.do_quantity_issued;
+    setNewDoQty(String(qty));
+    setDoFormError('');
+    setDoFormOpen(true);
+  };
+
+  const handleDeleteDO = async (id: number) => {
+    if (window.confirm('Are you sure you want to permanently delete this Delivery Order? This will delete all associated allocations.')) {
+      try {
+        await deleteDO(id);
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete Delivery Order.');
+      }
     }
   };
 
@@ -535,6 +571,7 @@ export function KaantaParchiPage() {
                   setNewDoDate(new Date().toISOString().split('T')[0]);
                   setNewDoQty('');
                   setDoFormError('');
+                  setEditingDO(null);
                   setDoFormOpen(true);
                 }} variant="outline" className="py-2.5 w-full text-xs">
                   + Add New Delivery Order
@@ -555,12 +592,13 @@ export function KaantaParchiPage() {
                     <th className="px-4 py-2 text-right">Total Delivered ({unitLabel})</th>
                     <th className="px-4 py-2 text-right">Qty to be Milled (67% - {unitLabel})</th>
                     <th className="px-4 py-2 text-right">Remaining Quota ({unitLabel})</th>
+                    <th className="px-4 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800 font-medium text-gray-700 dark:text-slate-300">
                   {deliveryOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
+                      <td colSpan={9} className="px-4 py-6 text-center text-gray-400">
                         No active Delivery Orders found.
                       </td>
                     </tr>
@@ -577,6 +615,22 @@ export function KaantaParchiPage() {
                         <td className="px-4 py-2 text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(getConvertedVal(doObj.total_quantity))}</td>
                         <td className="px-4 py-2 text-right font-mono text-blue-600 dark:text-blue-400">{formatCurrency(getConvertedVal(doObj.quantity_to_be_milled))}</td>
                         <td className="px-4 py-2 text-right font-mono text-amber-600 dark:text-amber-400">{formatCurrency(getConvertedVal(doObj.remaining_quantity))}</td>
+                        <td className="px-4 py-2 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-3 select-none">
+                            <button
+                              onClick={() => handleOpenEditDoModal(doObj)}
+                              className="text-navy-600 dark:text-navy-400 hover:text-navy-800 dark:hover:text-navy-200 text-xs font-semibold"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteDO(doObj.id)}
+                              className="text-red-500 hover:text-red-700 text-xs font-semibold"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1147,12 +1201,12 @@ export function KaantaParchiPage() {
       <RMModal
         isOpen={doFormOpen}
         onClose={() => setDoFormOpen(false)}
-        title="Add Delivery Order"
+        title={editingDO ? "Edit Delivery Order" : "Add Delivery Order"}
         size="md"
       >
         <form onSubmit={handleDoSubmit} className="space-y-4">
           {doFormError && (
-            <div className="p-3 text-xs text-red-600 bg-red-55 border border-red-200 rounded-lg">
+            <div className="p-3 text-xs text-red-650 bg-red-50 border border-red-200 rounded-lg">
               {doFormError}
             </div>
           )}
@@ -1197,7 +1251,7 @@ export function KaantaParchiPage() {
               Cancel
             </RMButton>
             <RMButton type="submit" variant="primary">
-              Create DO
+              {editingDO ? "Save Changes" : "Create DO"}
             </RMButton>
           </div>
         </form>
