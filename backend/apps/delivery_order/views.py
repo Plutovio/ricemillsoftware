@@ -22,6 +22,22 @@ class DeliveryOrderViewSet(viewsets.ModelViewSet):
     filterset_class = DeliveryOrderFilter
     permission_classes = [IsAuthenticated]
 
+    def _register_do_location(self, do_location):
+        """Register the DO location in DropdownOption if it does not already exist."""
+        if do_location:
+            val = do_location.strip()
+            from apps.bank_guarantee.models import DropdownOption
+            if not DropdownOption.objects.filter(category='do_location', value__iexact=val).exists():
+                DropdownOption.objects.create(category='do_location', value=val)
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        self._register_do_location(instance.do_location)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        self._register_do_location(instance.do_location)
+
     @action(detail=False, methods=['get'], url_path='aggregate-bg-quantity')
     def aggregate_bg_quantity(self, request):
         """Returns the aggregate total quantity figures pulled from the Bank Guarantee module."""

@@ -12,4 +12,5 @@ export type DropdownCategory =
   | 'debit_account_no' 
   | 'department' 
   | 'account_no_of_cheque'
-  | 'vehicle_no';
+  | 'vehicle_no'
+  | 'do_location';

@@ -4,6 +4,7 @@ export interface DeliveryOrder {
   do_date: string;
   source: 'NAN' | 'FCI';
   do_quantity_issued: string | number;
+  do_location?: string;
   total_quantity: string | number;
   quantity_to_be_milled: string | number;
   remaining_quantity: string | number;
@@ -17,6 +18,7 @@ export interface DeliveryOrderFormData {
   do_date: string;
   source: 'NAN' | 'FCI';
   do_quantity_issued: number;
+  do_location?: string;
 }
 
 export interface DeliveryOrderFilters {

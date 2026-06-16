@@ -17,6 +17,7 @@ const CATEGORIES: { key: DropdownCategory; label: string; hasIfsc: boolean }[] =
   { key: 'department', label: 'Departments', hasIfsc: false },
   { key: 'account_no_of_cheque', label: 'Cheque Accounts', hasIfsc: false },
   { key: 'vehicle_no', label: 'Vehicles', hasIfsc: false },
+  { key: 'do_location', label: 'DO Locations', hasIfsc: false },
 ];
 
 export function DropdownManager({ isOpen, onClose }: DropdownManagerProps) {

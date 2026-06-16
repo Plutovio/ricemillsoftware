@@ -15,6 +15,7 @@ class DeliveryOrder(BaseModel):
     do_date = models.DateField()
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     do_quantity_issued = models.DecimalField(max_digits=15, decimal_places=2)
+    do_location = models.CharField(max_length=255, blank=True, null=True)
     
     # Running total of dhan delivered against this DO so far
     total_quantity = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))

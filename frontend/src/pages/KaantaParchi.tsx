@@ -63,6 +63,12 @@ export function KaantaParchiPage() {
   const [doPanelOpen, setDoPanelOpen] = useState(false);
   const [doFormOpen, setDoFormOpen] = useState(false);
   const [editingDO, setEditingDO] = useState<DeliveryOrder | null>(null);
+  
+  // DO Location options & custom selection state
+  const [newDoLocation, setNewDoLocation] = useState('');
+  const [customDoLocation, setCustomDoLocation] = useState('');
+  const [isCustomLocation, setIsCustomLocation] = useState(false);
+  const [locations, setLocations] = useState<DropdownOption[]>([]);
 
   // Kaanta Parchi Form Modal
   const [kpFormOpen, setKpFormOpen] = useState(false);
@@ -125,6 +131,17 @@ export function KaantaParchiPage() {
     try {
       const response = await dropdownApi.fetchOptions('vehicle_no');
       setVehicles(response.data);
+    } catch {}
+  }
+
+  useEffect(() => {
+    fetchLocations();
+  }, [doFormOpen]);
+
+  async function fetchLocations() {
+    try {
+      const response = await dropdownApi.fetchOptions('do_location');
+      setLocations(response.data);
     } catch {}
   }
 
@@ -401,24 +418,31 @@ export function KaantaParchiPage() {
       qty = qty * 100;
     }
 
+    const finalLocation = isCustomLocation ? customDoLocation.trim() : newDoLocation;
+
     try {
       if (editingDO) {
         await updateDO(editingDO.id, {
           do_number: newDoNumber.trim(),
           do_date: newDoDate,
           source: newDoSource,
-          do_quantity_issued: qty
+          do_quantity_issued: qty,
+          do_location: finalLocation
         });
       } else {
         await createDO({
           do_number: newDoNumber.trim(),
           do_date: newDoDate,
           source: newDoSource,
-          do_quantity_issued: qty
+          do_quantity_issued: qty,
+          do_location: finalLocation
         });
       }
       setNewDoNumber('');
       setNewDoQty('');
+      setNewDoLocation('');
+      setCustomDoLocation('');
+      setIsCustomLocation(false);
       setDoFormError('');
       setEditingDO(null);
       setDoFormOpen(false);
@@ -432,6 +456,18 @@ export function KaantaParchiPage() {
     setNewDoNumber(doObj.do_number);
     setNewDoDate(doObj.do_date);
     setNewDoSource(doObj.source);
+    
+    // Set location fields
+    if (doObj.do_location) {
+      setNewDoLocation(doObj.do_location);
+      setIsCustomLocation(false);
+      setCustomDoLocation('');
+    } else {
+      setNewDoLocation('');
+      setIsCustomLocation(false);
+      setCustomDoLocation('');
+    }
+
     // Convert backend value (which is in kg) to active unit for editing
     const qty = quantityUnit === 'quintal' ? parseFloat(String(doObj.do_quantity_issued)) / 100 : doObj.do_quantity_issued;
     setNewDoQty(String(qty));
@@ -570,6 +606,9 @@ export function KaantaParchiPage() {
                   setNewDoNumber('');
                   setNewDoDate(new Date().toISOString().split('T')[0]);
                   setNewDoQty('');
+                  setNewDoLocation('');
+                  setCustomDoLocation('');
+                  setIsCustomLocation(false);
                   setDoFormError('');
                   setEditingDO(null);
                   setDoFormOpen(true);
@@ -587,6 +626,7 @@ export function KaantaParchiPage() {
                     <th className="px-4 py-2">DO Number</th>
                     <th className="px-4 py-2">DO Date</th>
                     <th className="px-4 py-2">Source</th>
+                    <th className="px-4 py-2">Location</th>
                     <th className="px-4 py-2 text-right">Total BG Quantity ({unitLabel})</th>
                     <th className="px-4 py-2 text-right">Quantity Issued ({unitLabel})</th>
                     <th className="px-4 py-2 text-right">Total Delivered ({unitLabel})</th>
@@ -598,7 +638,7 @@ export function KaantaParchiPage() {
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800 font-medium text-gray-700 dark:text-slate-300">
                   {deliveryOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-6 text-center text-gray-400">
+                      <td colSpan={10} className="px-4 py-6 text-center text-gray-400">
                         No active Delivery Orders found.
                       </td>
                     </tr>
@@ -610,6 +650,7 @@ export function KaantaParchiPage() {
                         <td className="px-4 py-2">
                           <span className="px-2 py-0.5 rounded text-[10px] bg-gray-100 dark:bg-slate-800 dark:text-slate-200">{doObj.source}</span>
                         </td>
+                        <td className="px-4 py-2 text-gray-750 dark:text-slate-300">{doObj.do_location || '—'}</td>
                         <td className="px-4 py-2 text-right font-mono text-navy-800 dark:text-navy-200">{formatCurrency(getConvertedVal((doObj.aggregate_bg_quantity ?? 0) * 100))}</td>
                         <td className="px-4 py-2 text-right font-mono">{formatCurrency(getConvertedVal(doObj.do_quantity_issued))}</td>
                         <td className="px-4 py-2 text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(getConvertedVal(doObj.total_quantity))}</td>
@@ -1236,6 +1277,48 @@ export function KaantaParchiPage() {
               { value: 'FCI', label: 'FCI' }
             ]}
           />
+
+          {isCustomLocation ? (
+            <div className="flex flex-col gap-1">
+              <RMInput
+                label="Enter Custom Location"
+                placeholder="e.g. Silo C"
+                value={customDoLocation}
+                onChange={(e) => setCustomDoLocation(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCustomLocation(false);
+                  setNewDoLocation(locations.length > 0 ? locations[0].value : '');
+                }}
+                className="text-left text-[10px] text-navy-600 dark:text-navy-400 hover:underline mt-0.5 font-semibold"
+              >
+                Select from existing locations
+              </button>
+            </div>
+          ) : (
+            <RMSelect
+              label="DO Location"
+              value={newDoLocation}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === 'custom') {
+                  setIsCustomLocation(true);
+                  setCustomDoLocation('');
+                } else {
+                  setNewDoLocation(val);
+                }
+              }}
+              options={[
+                { value: '', label: 'Select DO Location' },
+                ...locations.map(loc => ({ value: loc.value, label: loc.value })),
+                { value: 'custom', label: '+ Add custom location...' }
+              ]}
+              placeholder="Select location"
+            />
+          )}
 
           <RMInput
             label={`DO Quantity Issued (${unitLabel})`}

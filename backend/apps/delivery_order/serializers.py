@@ -9,6 +9,7 @@ class DeliveryOrderSerializer(serializers.ModelSerializer):
         model = DeliveryOrder
         fields = [
             'id', 'do_number', 'do_date', 'source', 'do_quantity_issued',
+            'do_location',
             'total_quantity', 'quantity_to_be_milled', 'remaining_quantity',
             'aggregate_bg_quantity', 'created_at', 'updated_at'
         ]
