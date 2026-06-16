@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useDeliveryOrder } from '../context/DeliveryOrderContext';
 import { dropdownApi } from '../api/dropdownApi';
 import type { DropdownOption } from '../types/dropdown';
@@ -602,7 +602,7 @@ export function KaantaParchiPage() {
                 kaantaParchis.map(kp => {
                   const isExpanded = expandedKpIds.includes(kp.id);
                   return (
-                    <>
+                    <Fragment key={kp.id}>
                       <tr
                         key={kp.id}
                         onClick={() => toggleRowExpand(kp.id)}
@@ -675,7 +675,7 @@ export function KaantaParchiPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })
               )}
