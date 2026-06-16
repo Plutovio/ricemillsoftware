@@ -1,9 +1,11 @@
+from decimal import Decimal
 from rest_framework import serializers
 from .models import DeliveryOrder, KaantaParchi, KaantaParchiDOAllocation
 
 
 class DeliveryOrderSerializer(serializers.ModelSerializer):
     aggregate_bg_quantity = serializers.SerializerMethodField()
+    remaining_quantity = serializers.SerializerMethodField()
 
     class Meta:
         model = DeliveryOrder
@@ -24,6 +26,16 @@ class DeliveryOrderSerializer(serializers.ModelSerializer):
             return sum(bg.quantity for bg in BankGuarantee.objects.all())
         except ImportError:
             return 0.0
+
+    def get_remaining_quantity(self, obj):
+        try:
+            from apps.bank_guarantee.models import BankGuarantee
+            total_bg_quintals = sum(bg.quantity for bg in BankGuarantee.objects.all())
+            total_bg_kg = Decimal(str(total_bg_quintals)) * Decimal('100.00')
+            rem = total_bg_kg - obj.do_quantity_issued
+            return str(rem.quantize(Decimal('0.01')))
+        except Exception:
+            return "0.00"
 
 
 class KaantaParchiDOAllocationSerializer(serializers.ModelSerializer):

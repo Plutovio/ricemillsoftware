@@ -37,7 +37,14 @@ class DeliveryOrder(BaseModel):
         
         self.total_quantity = total_qty
         self.quantity_to_be_milled = (total_qty * MILLING_YIELD_PERCENT).quantize(Decimal('0.01'))
-        self.remaining_quantity = (self.do_quantity_issued - total_qty).quantize(Decimal('0.01'))
+        
+        try:
+            from apps.bank_guarantee.models import BankGuarantee
+            total_bg_quintals = sum(bg.quantity for bg in BankGuarantee.objects.all())
+            total_bg_kg = Decimal(str(total_bg_quintals)) * Decimal('100.00')
+            self.remaining_quantity = (total_bg_kg - self.do_quantity_issued).quantize(Decimal('0.01'))
+        except Exception:
+            self.remaining_quantity = Decimal('0.00')
         
         # Save without triggering signals or infinite loops
         DeliveryOrder.objects.filter(id=self.id).update(
