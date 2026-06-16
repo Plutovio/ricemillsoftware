@@ -68,6 +68,16 @@ export function BankGuaranteeProvider({ children }: { children: React.ReactNode 
   const [pageSize, setPageSize] = useState(25);
   const [ordering, setOrdering] = useState('-issue_date');
 
+  const fetchExpiringSoon = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const response = await bankGuaranteeApi.fetchExpiringSoon();
+      setExpiringSoonRecords(response.data);
+    } catch {
+      // Silently fail for notifications
+    }
+  }, [isAuthenticated]);
+
   const fetchRecords = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
@@ -95,6 +105,7 @@ export function BankGuaranteeProvider({ children }: { children: React.ReactNode 
     try {
       await bankGuaranteeApi.create(data);
       await fetchRecords();
+      await fetchExpiringSoon();
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { bg_number?: string[]; detail?: string } } };
       const message = axiosErr.response?.data?.bg_number?.[0] || axiosErr.response?.data?.detail || 'Failed to create record';
@@ -102,30 +113,32 @@ export function BankGuaranteeProvider({ children }: { children: React.ReactNode 
     } finally {
       setLoading(false);
     }
-  }, [fetchRecords]);
+  }, [fetchRecords, fetchExpiringSoon]);
 
   const updateRecord = useCallback(async (id: number, data: Partial<BankGuaranteeFormData>) => {
     setLoading(true);
     try {
       await bankGuaranteeApi.update(id, data);
       await fetchRecords();
+      await fetchExpiringSoon();
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       throw new Error(axiosErr.response?.data?.detail || 'Failed to update record');
     } finally {
       setLoading(false);
     }
-  }, [fetchRecords]);
+  }, [fetchRecords, fetchExpiringSoon]);
 
   const deleteRecord = useCallback(async (id: number) => {
     try {
       await bankGuaranteeApi.delete(id);
       await fetchRecords();
+      await fetchExpiringSoon();
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       throw new Error(axiosErr.response?.data?.detail || 'Failed to delete record');
     }
-  }, [fetchRecords]);
+  }, [fetchRecords, fetchExpiringSoon]);
 
   const setFilters = useCallback((filters: BankGuaranteeFilters) => {
     setActiveFilters(filters);
@@ -185,15 +198,7 @@ export function BankGuaranteeProvider({ children }: { children: React.ReactNode 
     window.URL.revokeObjectURL(url);
   }, [activeFilters, selectedYear]);
 
-  const fetchExpiringSoon = useCallback(async () => {
-    if (!isAuthenticated) return;
-    try {
-      const response = await bankGuaranteeApi.fetchExpiringSoon();
-      setExpiringSoonRecords(response.data);
-    } catch {
-      // Silently fail for notifications
-    }
-  }, [isAuthenticated]);
+
 
   // Auto-fetch on filter/year/page changes
   useEffect(() => {

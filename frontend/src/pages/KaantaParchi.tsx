@@ -655,7 +655,9 @@ export function KaantaParchiPage() {
                         <td className="px-4 py-2 text-right font-mono">{formatCurrency(getConvertedVal(doObj.do_quantity_issued))}</td>
                         <td className="px-4 py-2 text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(getConvertedVal(doObj.total_quantity))}</td>
                         <td className="px-4 py-2 text-right font-mono text-blue-600 dark:text-blue-400">{formatCurrency(getConvertedVal(doObj.quantity_to_be_milled))}</td>
-                        <td className="px-4 py-2 text-right font-mono text-amber-600 dark:text-amber-400">{formatCurrency(getConvertedVal(doObj.remaining_quantity))}</td>
+                        <td className="px-4 py-2 text-right font-mono text-amber-650 dark:text-amber-450">
+                          {formatCurrency(getConvertedVal(((doObj.aggregate_bg_quantity ?? 0) * 100) - parseFloat(String(doObj.do_quantity_issued || 0))))}
+                        </td>
                         <td className="px-4 py-2 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-3 select-none">
                             <button

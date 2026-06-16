@@ -18,8 +18,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Successfully seeded database!'))
 
     def _seed_dropdowns(self):
-        # Clear existing
-        DropdownOption.objects.all().delete()
+        # Only seed if no options exist
+        if DropdownOption.objects.exists():
+            self.stdout.write('  Dropdown options already exist, skipping seeding.')
+            return
 
         # Bank Names
         banks = ['State Bank of India', 'Punjab National Bank', 'Bank of Baroda', 'Canara Bank']
@@ -77,8 +79,10 @@ class Command(BaseCommand):
             self.stdout.write('  Reset default user password to password123')
 
     def _seed_bank_guarantees(self):
-        # Clear existing
-        BankGuarantee.objects.all().delete()
+        # Only seed if no guarantees exist
+        if BankGuarantee.objects.exists():
+            self.stdout.write('  Bank Guarantees already exist, skipping seeding.')
+            return
 
         today = date.today()
 
