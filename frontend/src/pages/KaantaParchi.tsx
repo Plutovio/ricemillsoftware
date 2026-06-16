@@ -12,8 +12,11 @@ import { RMSelect } from '../components/ui/RMSelect';
 import { RMButton } from '../components/ui/RMButton';
 import { BORA_WEIGHT, TARE_WEIGHT_PER_BORA } from '../constants/deliveryOrder';
 import { formatCurrency } from '../utils/formatDate';
+import { useBankGuarantee } from '../context/BankGuaranteeContext';
+import { convertQuantity } from '../utils/unitConversion';
 
 export function KaantaParchiPage() {
+  const { quantityUnit } = useBankGuarantee();
   const {
     deliveryOrders,
     kaantaParchis,
@@ -26,6 +29,9 @@ export function KaantaParchiPage() {
     kpPageSize,
     setKpPage,
     aggregateBgQuantity,
+    fetchDOs,
+    fetchKPs,
+    fetchAggregateBgQuantity,
     createDO,
     createKP,
     updateKP,
@@ -37,6 +43,18 @@ export function KaantaParchiPage() {
     setKpYear,
     addKpYear,
   } = useDeliveryOrder();
+
+  const unitLabel = quantityUnit === 'quintal' ? 'q' : 'kg';
+
+  const getConvertedVal = (val: string | number) => {
+    return convertQuantity(parseFloat(String(val || 0)), quantityUnit);
+  };
+
+  useEffect(() => {
+    fetchDOs();
+    fetchKPs();
+    fetchAggregateBgQuantity();
+  }, [fetchDOs, fetchKPs, fetchAggregateBgQuantity]);
 
   // Collapsible DO section
   const [doPanelOpen, setDoPanelOpen] = useState(false);
@@ -110,6 +128,10 @@ export function KaantaParchiPage() {
   const liveWeightOfBoras = noOfBoras * BORA_WEIGHT;
   const liveWeightOfDhan = liveWeightOfBoras - (TARE_WEIGHT_PER_BORA * noOfBoras);
   const liveNetWeight = filledTruckWeight - emptyTruckWeight;
+
+  const convertedLiveWeightOfBoras = convertQuantity(liveWeightOfBoras, quantityUnit);
+  const convertedLiveWeightOfDhan = convertQuantity(liveWeightOfDhan, quantityUnit);
+  const convertedLiveNetWeight = convertQuantity(liveNetWeight, quantityUnit);
 
   // Allocation Boras Sum
   const totalAllocatedBoras = isMultiDo
@@ -360,7 +382,7 @@ export function KaantaParchiPage() {
   const handleDoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setDoFormError('');
-    const qty = parseFloat(newDoQty);
+    let qty = parseFloat(newDoQty);
     if (!newDoNumber.trim()) {
       setDoFormError('DO Number is required.');
       return;
@@ -368,6 +390,11 @@ export function KaantaParchiPage() {
     if (isNaN(qty) || qty <= 0) {
       setDoFormError('Issued quantity must be greater than 0.');
       return;
+    }
+
+    // Convert from active unit back to kilograms for the backend
+    if (quantityUnit === 'quintal') {
+      qty = qty * 100;
     }
 
     try {
@@ -488,16 +515,16 @@ export function KaantaParchiPage() {
               <div className="bg-navy-50/40 dark:bg-slate-950/20 border border-navy-100 dark:border-slate-800 p-4 rounded-xl">
                 <span className="text-[10px] font-bold text-navy-500 dark:text-navy-400 uppercase tracking-wider block mb-1">Aggregate DO Allocations</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-navy-850 dark:text-white font-mono">{formatCurrency(totalDOQuantity)}</span>
-                  <span className="text-xs text-gray-500 font-mono">kg</span>
+                  <span className="text-lg font-bold text-navy-850 dark:text-white font-mono">{formatCurrency(getConvertedVal(totalDOQuantity))}</span>
+                  <span className="text-xs text-gray-500 font-mono">{unitLabel}</span>
                 </div>
               </div>
 
               <div className="bg-emerald-50/40 dark:bg-slate-950/20 border border-emerald-100 dark:border-slate-800 p-4 rounded-xl">
                 <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wider block mb-1">BG Quota Cross-Reference</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400 font-mono">{formatCurrency(aggregateBgQuantity)}</span>
-                  <span className="text-xs text-gray-500 font-mono">kg</span>
+                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400 font-mono">{formatCurrency(getConvertedVal(aggregateBgQuantity))}</span>
+                  <span className="text-xs text-gray-500 font-mono">{unitLabel}</span>
                 </div>
                 <p className="text-[9px] text-gray-500 dark:text-slate-500 font-medium mt-1">Total quantity active across all Bank Guarantees</p>
               </div>
@@ -523,16 +550,17 @@ export function KaantaParchiPage() {
                     <th className="px-4 py-2">DO Number</th>
                     <th className="px-4 py-2">DO Date</th>
                     <th className="px-4 py-2">Source</th>
-                    <th className="px-4 py-2 text-right">Quantity Issued (kg)</th>
-                    <th className="px-4 py-2 text-right">Total Delivered (kg)</th>
-                    <th className="px-4 py-2 text-right">Qty to be Milled (67%)</th>
-                    <th className="px-4 py-2 text-right">Remaining Quota (kg)</th>
+                    <th className="px-4 py-2 text-right">Total BG Quantity ({unitLabel})</th>
+                    <th className="px-4 py-2 text-right">Quantity Issued ({unitLabel})</th>
+                    <th className="px-4 py-2 text-right">Total Delivered ({unitLabel})</th>
+                    <th className="px-4 py-2 text-right">Qty to be Milled (67% - {unitLabel})</th>
+                    <th className="px-4 py-2 text-right">Remaining Quota ({unitLabel})</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800 font-medium text-gray-700 dark:text-slate-300">
                   {deliveryOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                      <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
                         No active Delivery Orders found.
                       </td>
                     </tr>
@@ -544,10 +572,11 @@ export function KaantaParchiPage() {
                         <td className="px-4 py-2">
                           <span className="px-2 py-0.5 rounded text-[10px] bg-gray-100 dark:bg-slate-800 dark:text-slate-200">{doObj.source}</span>
                         </td>
-                        <td className="px-4 py-2 text-right font-mono">{formatCurrency(doObj.do_quantity_issued)}</td>
-                        <td className="px-4 py-2 text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(doObj.total_quantity)}</td>
-                        <td className="px-4 py-2 text-right font-mono text-blue-600 dark:text-blue-400">{formatCurrency(doObj.quantity_to_be_milled)}</td>
-                        <td className="px-4 py-2 text-right font-mono text-amber-600 dark:text-amber-400">{formatCurrency(doObj.remaining_quantity)}</td>
+                        <td className="px-4 py-2 text-right font-mono text-navy-800 dark:text-navy-200">{formatCurrency(getConvertedVal(doObj.aggregate_bg_quantity ?? 0))}</td>
+                        <td className="px-4 py-2 text-right font-mono">{formatCurrency(getConvertedVal(doObj.do_quantity_issued))}</td>
+                        <td className="px-4 py-2 text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(getConvertedVal(doObj.total_quantity))}</td>
+                        <td className="px-4 py-2 text-right font-mono text-blue-600 dark:text-blue-400">{formatCurrency(getConvertedVal(doObj.quantity_to_be_milled))}</td>
+                        <td className="px-4 py-2 text-right font-mono text-amber-600 dark:text-amber-400">{formatCurrency(getConvertedVal(doObj.remaining_quantity))}</td>
                       </tr>
                     ))
                   )}
@@ -577,11 +606,11 @@ export function KaantaParchiPage() {
                 <th className="px-4 py-3">Gate Pass No.</th>
                 <th className="px-4 py-3">Gate Pass Date</th>
                 <th className="px-4 py-3 text-right">No. of Sacks</th>
-                <th className="px-4 py-3 text-right">Sack Wt (kg)</th>
-                <th className="px-4 py-3 text-right">Dhan Wt (kg)</th>
-                <th className="px-4 py-3 text-right">Empty Truck (kg)</th>
-                <th className="px-4 py-3 text-right">Filled Truck (kg)</th>
-                <th className="px-4 py-3 text-right font-bold">Net Wt (kg)</th>
+                <th className="px-4 py-3 text-right">Sack Wt ({unitLabel})</th>
+                <th className="px-4 py-3 text-right">Dhan Wt ({unitLabel})</th>
+                <th className="px-4 py-3 text-right">Empty Truck ({unitLabel})</th>
+                <th className="px-4 py-3 text-right">Filled Truck ({unitLabel})</th>
+                <th className="px-4 py-3 text-right font-bold">Net Wt ({unitLabel})</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -622,11 +651,11 @@ export function KaantaParchiPage() {
                         <td className="px-4 py-3.5 text-gray-600 dark:text-slate-350">{kp.gate_pass_no}</td>
                         <td className="px-4 py-3.5 text-gray-600 dark:text-slate-350">{kp.gate_pass_date}</td>
                         <td className="px-4 py-3.5 text-right font-mono font-medium">{kp.no_of_boras}</td>
-                        <td className="px-4 py-3.5 text-right font-mono text-gray-600 dark:text-slate-350">{formatCurrency(kp.weight_of_boras)}</td>
-                        <td className="px-4 py-3.5 text-right font-mono text-gray-800 dark:text-slate-200">{formatCurrency(kp.weight_of_dhan)}</td>
-                        <td className="px-4 py-3.5 text-right font-mono text-gray-600 dark:text-slate-350">{formatCurrency(kp.weight_of_empty_truck)}</td>
-                        <td className="px-4 py-3.5 text-right font-mono text-gray-600 dark:text-slate-350">{formatCurrency(kp.weight_of_filled_truck)}</td>
-                        <td className="px-4 py-3.5 text-right font-mono font-bold text-navy-800 dark:text-white">{formatCurrency(kp.net_weight)}</td>
+                        <td className="px-4 py-3.5 text-right font-mono text-gray-600 dark:text-slate-350">{formatCurrency(getConvertedVal(kp.weight_of_boras))}</td>
+                        <td className="px-4 py-3.5 text-right font-mono text-gray-800 dark:text-slate-200">{formatCurrency(getConvertedVal(kp.weight_of_dhan))}</td>
+                        <td className="px-4 py-3.5 text-right font-mono text-gray-600 dark:text-slate-350">{formatCurrency(getConvertedVal(kp.weight_of_empty_truck))}</td>
+                        <td className="px-4 py-3.5 text-right font-mono text-gray-600 dark:text-slate-350">{formatCurrency(getConvertedVal(kp.weight_of_filled_truck))}</td>
+                        <td className="px-4 py-3.5 text-right font-mono font-bold text-navy-800 dark:text-white">{formatCurrency(getConvertedVal(kp.net_weight))}</td>
                         <td className="px-4 py-3.5 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-3 select-none">
                             <button
@@ -653,20 +682,20 @@ export function KaantaParchiPage() {
                               <h4 className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">DO Allocation Breakdown</h4>
                               <div className="flex flex-wrap gap-4">
                                 {kp.do_allocations.map(a => (
-                                  <div key={a.id} className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 px-3 py-2 rounded-lg flex items-center gap-4 text-xs font-semibold">
+                                  <div key={a.id || a.delivery_order_id} className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 px-3 py-2 rounded-lg flex items-center gap-4 text-xs font-semibold">
                                     <div>
                                       <span className="text-[10px] text-gray-400 block">DO Number</span>
                                       <span className="text-gray-800 dark:text-white">{a.delivery_order_number}</span>
                                     </div>
-                                    <div className="border-l border-gray-200 dark:border-slate-700 h-6"></div>
+                                    <div className="border-l border-gray-250 dark:border-slate-700 h-6"></div>
                                     <div>
                                       <span className="text-[10px] text-gray-400 block">Sacks Allocated</span>
                                       <span className="text-gray-800 dark:text-white font-mono">{a.allocated_boras} bags</span>
                                     </div>
-                                    <div className="border-l border-gray-200 dark:border-slate-700 h-6"></div>
+                                    <div className="border-l border-gray-250 dark:border-slate-700 h-6"></div>
                                     <div>
-                                      <span className="text-[10px] text-gray-400 block">Proportional Quantity</span>
-                                      <span className="text-navy-650 dark:text-navy-350 font-mono">{formatCurrency(a.allocated_quantity ?? 0)} kg</span>
+                                      <span className="text-[10px] text-gray-400 block">Proportional Quantity ({unitLabel})</span>
+                                      <span className="text-navy-650 dark:text-navy-350 font-mono">{formatCurrency(getConvertedVal(a.allocated_quantity ?? 0))} {unitLabel}</span>
                                     </div>
                                   </div>
                                 ))}
@@ -830,43 +859,43 @@ export function KaantaParchiPage() {
               />
 
               <RMInput
-                label="Weight of Sacks (Boras) [Auto]"
+                label={`Weight of Sacks (Boras) [Auto - ${unitLabel}]`}
                 readOnly
-                value={noOfBoras ? `${liveWeightOfBoras} kg` : '0 kg'}
-                helperText="Computed as sacks × 40 kg"
+                value={noOfBoras ? `${formatCurrency(convertedLiveWeightOfBoras)} ${unitLabel}` : `0.00 ${unitLabel}`}
+                helperText={`Computed as sacks × ${convertQuantity(BORA_WEIGHT, quantityUnit)} ${unitLabel}`}
               />
 
               <RMInput
-                label="Weight of Dhan [Auto]"
+                label={`Weight of Dhan [Auto - ${unitLabel}]`}
                 readOnly
-                value={noOfBoras ? `${liveWeightOfDhan} kg` : '0 kg'}
-                helperText="Sacks Wt − (0.5 kg tare × sacks)"
+                value={noOfBoras ? `${formatCurrency(convertedLiveWeightOfDhan)} ${unitLabel}` : `0.00 ${unitLabel}`}
+                helperText={`Sacks Wt − (${convertQuantity(TARE_WEIGHT_PER_BORA, quantityUnit)} ${unitLabel} tare × sacks)`}
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <RMInput
-                label="Weight of Empty Truck (kg)"
+                label={`Weight of Empty Truck (${unitLabel})`}
                 type="number"
-                placeholder="e.g. 12000"
-                value={emptyTruckWeight || ''}
-                onChange={(e) => setEmptyTruckWeight(parseFloat(e.target.value) || 0)}
+                placeholder={quantityUnit === 'quintal' ? 'e.g. 120' : 'e.g. 12000'}
+                value={quantityUnit === 'quintal' ? (emptyTruckWeight ? emptyTruckWeight / 100 : '') : (emptyTruckWeight || '')}
+                onChange={(e) => setEmptyTruckWeight(quantityUnit === 'quintal' ? (parseFloat(e.target.value) || 0) * 100 : (parseFloat(e.target.value) || 0))}
                 required
               />
 
               <RMInput
-                label="Weight of Filled Truck (kg)"
+                label={`Weight of Filled Truck (${unitLabel})`}
                 type="number"
-                placeholder="e.g. 19900"
-                value={filledTruckWeight || ''}
-                onChange={(e) => setFilledTruckWeight(parseFloat(e.target.value) || 0)}
+                placeholder={quantityUnit === 'quintal' ? 'e.g. 199' : 'e.g. 19900'}
+                value={quantityUnit === 'quintal' ? (filledTruckWeight ? filledTruckWeight / 100 : '') : (filledTruckWeight || '')}
+                onChange={(e) => setFilledTruckWeight(quantityUnit === 'quintal' ? (parseFloat(e.target.value) || 0) * 100 : (parseFloat(e.target.value) || 0))}
                 required
               />
 
               <RMInput
-                label="Net Weight [Auto]"
+                label={`Net Weight [Auto - ${unitLabel}]`}
                 readOnly
-                value={`${liveNetWeight} kg`}
+                value={`${formatCurrency(convertedLiveNetWeight)} ${unitLabel}`}
                 helperText="Filled Weight − Empty Weight"
                 className={liveNetWeight < 0 ? 'text-red-500 font-bold' : 'font-bold'}
               />
@@ -909,9 +938,9 @@ export function KaantaParchiPage() {
                   required
                 />
                 <RMInput
-                  label="Quantity Allocated (100% Dhan Wt)"
+                  label={`Quantity Allocated (100% Dhan Wt - ${unitLabel})`}
                   readOnly
-                  value={`${liveWeightOfDhan} kg`}
+                  value={`${formatCurrency(convertedLiveWeightOfDhan)} ${unitLabel}`}
                 />
               </div>
             ) : (
@@ -957,9 +986,9 @@ export function KaantaParchiPage() {
                         </div>
                         <div className="w-44">
                           <RMInput
-                            label="Allocated Dhan (kg)"
+                            label={`Allocated Dhan (${unitLabel})`}
                             readOnly
-                            value={`${proportionalQty.toFixed(2)} kg`}
+                            value={`${formatCurrency(convertQuantity(proportionalQty, quantityUnit))} ${unitLabel}`}
                           />
                         </div>
                         <RMButton
@@ -1155,9 +1184,9 @@ export function KaantaParchiPage() {
           />
 
           <RMInput
-            label="DO Quantity Issued (in kg)"
+            label={`DO Quantity Issued (${unitLabel})`}
             type="number"
-            placeholder="e.g. 50000"
+            placeholder={quantityUnit === 'quintal' ? 'e.g. 500' : 'e.g. 50000'}
             value={newDoQty}
             onChange={(e) => setNewDoQty(e.target.value)}
             required

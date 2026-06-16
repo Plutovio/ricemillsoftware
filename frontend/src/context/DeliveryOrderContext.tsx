@@ -122,6 +122,14 @@ export function DeliveryOrderProvider({ children }: { children: React.ReactNode 
     return new Date().getFullYear();
   });
 
+  const fetchAggregateBgQuantity = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const response = await deliveryOrderApi.fetchAggregateBgQuantity();
+      setAggregateBgQuantity(response.data.aggregate_bg_quantity);
+    } catch {}
+  }, [isAuthenticated]);
+
   const fetchDOs = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
@@ -135,12 +143,15 @@ export function DeliveryOrderProvider({ children }: { children: React.ReactNode 
       });
       setDeliveryOrders(response.data.results);
       setDoTotalCount(response.data.count);
+      
+      // Keep BG quantity in sync
+      await fetchAggregateBgQuantity();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to fetch Delivery Orders');
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, doFilters, doSelectedYear, doPage, doPageSize]);
+  }, [isAuthenticated, doFilters, doSelectedYear, doPage, doPageSize, fetchAggregateBgQuantity]);
 
   const fetchKPs = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -161,14 +172,6 @@ export function DeliveryOrderProvider({ children }: { children: React.ReactNode 
       setLoading(false);
     }
   }, [isAuthenticated, kpFilters, kpSelectedYear, kpPage, kpPageSize]);
-
-  const fetchAggregateBgQuantity = useCallback(async () => {
-    if (!isAuthenticated) return;
-    try {
-      const response = await deliveryOrderApi.fetchAggregateBgQuantity();
-      setAggregateBgQuantity(response.data.aggregate_bg_quantity);
-    } catch {}
-  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchDOs();

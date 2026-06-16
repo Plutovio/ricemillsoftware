@@ -7,7 +7,6 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { BankGuaranteePage } from './pages/BankGuarantee';
-import { DeliveryOrdersPage } from './pages/DeliveryOrders';
 import { KaantaParchiPage } from './pages/KaantaParchi';
 
 // Protected Route wrapper component
@@ -54,7 +53,6 @@ export default function App() {
                 {/* Nested Application Pages */}
                 <Route index element={<Dashboard />} />
                 <Route path="bank-guarantees" element={<BankGuaranteePage />} />
-                <Route path="delivery-orders" element={<DeliveryOrdersPage />} />
                 <Route path="kaanta-parchi" element={<KaantaParchiPage />} />
               </Route>
 
