@@ -1,11 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { BankGuaranteeProvider } from './context/BankGuaranteeContext';
+import { DeliveryOrderProvider } from './context/DeliveryOrderContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { BankGuaranteePage } from './pages/BankGuarantee';
+import { DeliveryOrdersPage } from './pages/DeliveryOrders';
+import { KaantaParchiPage } from './pages/KaantaParchi';
 
 // Protected Route wrapper component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -33,28 +36,32 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <BankGuaranteeProvider>
-          <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+          <DeliveryOrderProvider>
+            <Routes>
+              {/* Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-            {/* Application Main Layout Wrapper */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              {/* Nested Application Pages */}
-              <Route index element={<Dashboard />} />
-              <Route path="bank-guarantees" element={<BankGuaranteePage />} />
-            </Route>
+              {/* Application Main Layout Wrapper */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                {/* Nested Application Pages */}
+                <Route index element={<Dashboard />} />
+                <Route path="bank-guarantees" element={<BankGuaranteePage />} />
+                <Route path="delivery-orders" element={<DeliveryOrdersPage />} />
+                <Route path="kaanta-parchi" element={<KaantaParchiPage />} />
+              </Route>
 
-            {/* Fallback Catch-All Redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Fallback Catch-All Redirect */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </DeliveryOrderProvider>
         </BankGuaranteeProvider>
       </AuthProvider>
     </BrowserRouter>

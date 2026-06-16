@@ -21,6 +21,12 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
     setCurrentPage
   } = useBankGuarantee();
 
+  // Summing financial and quantity values for current records list
+  const totalAmountOfBg = records.reduce((sum, r) => sum + (parseFloat(String(r.amount_of_bg)) || 0), 0);
+  const totalPdc = records.reduce((sum, r) => sum + (parseFloat(String(r.pdc)) || 0), 0);
+  const totalTotalAmount = records.reduce((sum, r) => sum + (parseFloat(String(r.total_amount)) || 0), 0);
+  const totalQuantity = records.reduce((sum, r) => sum + (parseFloat(String(r.quantity)) || 0), 0);
+
   const columns = [
     { key: 'bg_number', label: 'BG Number', sortable: true },
     { key: 'bank_name', label: 'Bank Name', sortable: true },
@@ -243,6 +249,49 @@ export function BankGuaranteeTable({ onEdit, onDelete }: BankGuaranteeTableProps
                 ))
               )}
             </tbody>
+            {records.length > 0 && (
+              <tfoot>
+                <tr className="bg-gray-100 dark:bg-slate-800 border-t-2 border-gray-300 dark:border-slate-700 text-xs font-bold text-gray-900 dark:text-white select-none">
+                  <td className="px-4 py-3 font-semibold text-center border-r border-gray-200 dark:border-slate-800">
+                    Total
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 font-mono text-right border-r border-gray-200 dark:border-slate-800">
+                    ₹ {formatCurrency(totalAmountOfBg)}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-right border-r border-gray-200 dark:border-slate-800">
+                    ₹ {formatCurrency(totalPdc)}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-right border-r border-gray-200 dark:border-slate-800">
+                    ₹ {formatCurrency(totalTotalAmount)}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-right border-r border-gray-200 dark:border-slate-800">
+                    {convertQuantity(totalQuantity, quantityUnit).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                  <td className="px-4 py-3 border-r border-gray-200 dark:border-slate-800"></td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       </div>

@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.authentication',
     'apps.bank_guarantee',
+    'apps.delivery_order',
 ]
 
 MIDDLEWARE = [
