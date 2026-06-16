@@ -39,6 +39,19 @@ class BankGuaranteeSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'no_of_days', 'pdc', 'total_amount', 'quantity', 'created_at', 'updated_at']
 
+    def to_internal_value(self, data):
+        if isinstance(data, dict):
+            data = data.copy()
+            for field_name in list(data.keys()):
+                if data[field_name] == '':
+                    try:
+                        model_field = self.Meta.model._meta.get_field(field_name)
+                        if model_field.null:
+                            data[field_name] = None
+                    except Exception:
+                        pass
+        return super().to_internal_value(data)
+
     def get_no_of_days(self, obj):
         return obj.no_of_days
 
