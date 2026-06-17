@@ -217,7 +217,7 @@ class KaantaParchiViewSet(viewsets.ModelViewSet):
 
         headers = [
             'Kaanta Parchi No.', 'Vehicle No.', 'Driver Name', 'Driver Mobile', 'Gate Pass No.', 'Gate Pass Date',
-            'No. of Boras', 'Weight of Boras (kg)', 'Weight of Dhan (kg)', 'Weight of Empty Truck (kg)',
+            'Issued No. of Sacks', 'Sacks Allocated', 'Weight of Boras (kg)', 'Weight of Dhan (kg)', 'Weight of Empty Truck (kg)',
             'Weight of Filled Truck (kg)', 'Net Weight (kg)', 'DO(s) Allocated'
         ]
         ws.append(headers)
@@ -234,7 +234,7 @@ class KaantaParchiViewSet(viewsets.ModelViewSet):
             ws.append([
                 kp.kaanta_parchi_no, kp.vehicle_no, kp.driver_name, kp.driver_mobile_no, kp.gate_pass_no,
                 kp.gate_pass_date.isoformat() if kp.gate_pass_date else '',
-                kp.no_of_boras, float(kp.weight_of_boras), float(kp.weight_of_dhan),
+                kp.no_of_boras, kp.no_of_boras, float(kp.weight_of_boras), float(kp.weight_of_dhan),
                 float(kp.weight_of_empty_truck), float(kp.weight_of_filled_truck), float(kp.net_weight),
                 allocations_str
             ])

@@ -655,8 +655,8 @@ export function KaantaParchiPage() {
                         <td className="px-4 py-2 text-right font-mono">{formatCurrency(getConvertedVal(doObj.do_quantity_issued))}</td>
                         <td className="px-4 py-2 text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(getConvertedVal(doObj.total_quantity))}</td>
                         <td className="px-4 py-2 text-right font-mono text-blue-600 dark:text-blue-400">{formatCurrency(getConvertedVal(doObj.quantity_to_be_milled))}</td>
-                        <td className="px-4 py-2 text-right font-mono text-amber-650 dark:text-amber-450">
-                          {formatCurrency(getConvertedVal(((doObj.aggregate_bg_quantity ?? 0) * 100) - parseFloat(String(doObj.do_quantity_issued || 0))))}
+                        <td className="px-4 py-2 text-right font-mono text-amber-600 dark:text-amber-400">
+                          {formatCurrency(getConvertedVal(doObj.remaining_quantity))}
                         </td>
                         <td className="px-4 py-2 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-3 select-none">
@@ -702,7 +702,8 @@ export function KaantaParchiPage() {
                 <th className="px-4 py-3">Driver Mobile</th>
                 <th className="px-4 py-3">Gate Pass No.</th>
                 <th className="px-4 py-3">Gate Pass Date</th>
-                <th className="px-4 py-3 text-right">No. of Sacks</th>
+                <th className="px-4 py-3 text-right">Issued No. of Sacks</th>
+                <th className="px-4 py-3 text-right">Sacks Allocated</th>
                 <th className="px-4 py-3 text-right">Sack Wt ({unitLabel})</th>
                 <th className="px-4 py-3 text-right">Dhan Wt ({unitLabel})</th>
                 <th className="px-4 py-3 text-right">Empty Truck ({unitLabel})</th>
@@ -714,13 +715,13 @@ export function KaantaParchiPage() {
             <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
               {loading && kaantaParchis.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="px-4 py-8 text-center text-gray-500 dark:text-slate-400 font-mono text-xs">
+                  <td colSpan={15} className="px-4 py-8 text-center text-gray-500 dark:text-slate-400 font-mono text-xs">
                     Loading weighbridge slips...
                   </td>
                 </tr>
               ) : kaantaParchis.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="px-4 py-12 text-center text-gray-400 dark:text-slate-500 font-medium">
+                  <td colSpan={15} className="px-4 py-12 text-center text-gray-400 dark:text-slate-500 font-medium">
                     No weighbridge slips found for this period.
                   </td>
                 </tr>
@@ -748,6 +749,7 @@ export function KaantaParchiPage() {
                         <td className="px-4 py-3.5 text-gray-600 dark:text-slate-350">{kp.gate_pass_no}</td>
                         <td className="px-4 py-3.5 text-gray-600 dark:text-slate-350">{kp.gate_pass_date}</td>
                         <td className="px-4 py-3.5 text-right font-mono font-medium">{kp.no_of_boras}</td>
+                        <td className="px-4 py-3.5 text-right font-mono font-medium">{kp.no_of_boras}</td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-600 dark:text-slate-350">{formatCurrency(getConvertedVal(kp.weight_of_boras))}</td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-800 dark:text-slate-200">{formatCurrency(getConvertedVal(kp.weight_of_dhan))}</td>
                         <td className="px-4 py-3.5 text-right font-mono text-gray-600 dark:text-slate-350">{formatCurrency(getConvertedVal(kp.weight_of_empty_truck))}</td>
@@ -774,7 +776,7 @@ export function KaantaParchiPage() {
                       {/* Expanded row allocation details */}
                       {isExpanded && (
                         <tr className="bg-gray-50/30 dark:bg-slate-900/20">
-                          <td colSpan={14} className="px-10 py-3.5 border-t border-b border-gray-150 dark:border-slate-800">
+                          <td colSpan={15} className="px-10 py-3.5 border-t border-b border-gray-150 dark:border-slate-800">
                             <div className="space-y-2 select-none">
                               <h4 className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">DO Allocation Breakdown</h4>
                               <div className="flex flex-wrap gap-4">

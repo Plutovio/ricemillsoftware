@@ -29,29 +29,51 @@ class DeliveryOrder(BaseModel):
     def __str__(self):
         return f"DO-{self.do_number} ({self.source})"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.recalculate_totals()
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        remaining_do = DeliveryOrder.objects.first()
+        if remaining_do:
+            remaining_do.recalculate_totals()
+
     def recalculate_totals(self):
-        """Recalculate total quantity, quantity to be milled, and remaining quantity."""
+        """Recalculate totals and running remaining quota chronologically for all DOs."""
         from django.db.models import Sum
-        allocations = self.kaanta_allocations.all()
-        total_qty = allocations.aggregate(total=Sum('allocated_quantity'))['total'] or Decimal('0.00')
+        from apps.bank_guarantee.models import BankGuarantee
         
-        self.total_quantity = total_qty
-        self.quantity_to_be_milled = (total_qty * MILLING_YIELD_PERCENT).quantize(Decimal('0.01'))
-        
+        # 1. Fetch total BG quantity in kg
         try:
-            from apps.bank_guarantee.models import BankGuarantee
             total_bg_quintals = sum(bg.quantity for bg in BankGuarantee.objects.all())
             total_bg_kg = Decimal(str(total_bg_quintals)) * Decimal('100.00')
-            self.remaining_quantity = (total_bg_kg - self.do_quantity_issued).quantize(Decimal('0.01'))
         except Exception:
-            self.remaining_quantity = Decimal('0.00')
-        
-        # Save without triggering signals or infinite loops
-        DeliveryOrder.objects.filter(id=self.id).update(
-            total_quantity=self.total_quantity,
-            quantity_to_be_milled=self.quantity_to_be_milled,
-            remaining_quantity=self.remaining_quantity
-        )
+            total_bg_kg = Decimal('0.00')
+            
+        # 2. Loop over all DOs chronologically to compute running totals
+        running_sum = Decimal('0.00')
+        for do in DeliveryOrder.objects.all().order_by('do_date', 'created_at'):
+            allocations = do.kaanta_allocations.all()
+            total_qty = allocations.aggregate(total=Sum('allocated_quantity'))['total'] or Decimal('0.00')
+            
+            do.total_quantity = total_qty
+            do.quantity_to_be_milled = (total_qty * MILLING_YIELD_PERCENT).quantize(Decimal('0.01'))
+            
+            running_sum += do.do_quantity_issued
+            do.remaining_quantity = (total_bg_kg - running_sum).quantize(Decimal('0.01'))
+            
+            # Sync properties for the current instance in memory
+            if do.id == self.id:
+                self.total_quantity = do.total_quantity
+                self.quantity_to_be_milled = do.quantity_to_be_milled
+                self.remaining_quantity = do.remaining_quantity
+                
+            DeliveryOrder.objects.filter(id=do.id).update(
+                total_quantity=do.total_quantity,
+                quantity_to_be_milled=do.quantity_to_be_milled,
+                remaining_quantity=do.remaining_quantity
+            )
 
 
 class KaantaParchi(BaseModel):

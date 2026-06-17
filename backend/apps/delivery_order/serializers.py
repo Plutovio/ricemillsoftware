@@ -32,7 +32,15 @@ class DeliveryOrderSerializer(serializers.ModelSerializer):
             from apps.bank_guarantee.models import BankGuarantee
             total_bg_quintals = sum(bg.quantity for bg in BankGuarantee.objects.all())
             total_bg_kg = Decimal(str(total_bg_quintals)) * Decimal('100.00')
-            rem = total_bg_kg - obj.do_quantity_issued
+            
+            from django.db.models import Q, Sum
+            prior_dos = DeliveryOrder.objects.filter(
+                Q(do_date__lt=obj.do_date) |
+                Q(do_date=obj.do_date, created_at__lte=obj.created_at)
+            )
+            sum_issued = prior_dos.aggregate(total=Sum('do_quantity_issued'))['total'] or Decimal('0.00')
+            
+            rem = total_bg_kg - sum_issued
             return str(rem.quantize(Decimal('0.01')))
         except Exception:
             return "0.00"
