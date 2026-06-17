@@ -30,6 +30,8 @@ class DeliveryOrderSerializer(serializers.ModelSerializer):
     def get_remaining_quantity(self, obj):
         try:
             from apps.bank_guarantee.models import BankGuarantee
+            from .constants import BORA_WEIGHT
+            
             total_bg_quintals = sum(bg.quantity for bg in BankGuarantee.objects.all())
             total_bg_kg = Decimal(str(total_bg_quintals)) * Decimal('100.00')
             
@@ -40,7 +42,14 @@ class DeliveryOrderSerializer(serializers.ModelSerializer):
             )
             sum_issued = prior_dos.aggregate(total=Sum('do_quantity_issued'))['total'] or Decimal('0.00')
             
-            rem = total_bg_kg - sum_issued
+            from .models import KaantaParchiDOAllocation
+            sum_allocated_boras = KaantaParchiDOAllocation.objects.filter(
+                delivery_order__in=prior_dos
+            ).aggregate(total=Sum('allocated_boras'))['total'] or 0
+            
+            sum_sack_weight = Decimal(sum_allocated_boras) * BORA_WEIGHT
+            
+            rem = total_bg_kg - sum_issued - sum_sack_weight
             return str(rem.quantize(Decimal('0.01')))
         except Exception:
             return "0.00"

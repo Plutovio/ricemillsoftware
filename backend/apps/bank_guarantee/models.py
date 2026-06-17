@@ -52,6 +52,26 @@ class BankGuarantee(BaseModel):
     class Meta:
         ordering = ['-issue_date', '-created_at']
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        try:
+            from apps.delivery_order.models import DeliveryOrder
+            first_do = DeliveryOrder.objects.first()
+            if first_do:
+                first_do.recalculate_totals()
+        except Exception:
+            pass
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        try:
+            from apps.delivery_order.models import DeliveryOrder
+            first_do = DeliveryOrder.objects.first()
+            if first_do:
+                first_do.recalculate_totals()
+        except Exception:
+            pass
+
     def __str__(self):
         return f"BG-{self.bg_number} ({self.bank_name})"
 

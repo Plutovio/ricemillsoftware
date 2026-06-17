@@ -43,6 +43,7 @@ class DeliveryOrder(BaseModel):
         """Recalculate totals and running remaining quota chronologically for all DOs."""
         from django.db.models import Sum
         from apps.bank_guarantee.models import BankGuarantee
+        from .constants import BORA_WEIGHT
         
         # 1. Fetch total BG quantity in kg
         try:
@@ -52,7 +53,8 @@ class DeliveryOrder(BaseModel):
             total_bg_kg = Decimal('0.00')
             
         # 2. Loop over all DOs chronologically to compute running totals
-        running_sum = Decimal('0.00')
+        running_do_sum = Decimal('0.00')
+        running_sack_sum = Decimal('0.00')
         for do in DeliveryOrder.objects.all().order_by('do_date', 'created_at'):
             allocations = do.kaanta_allocations.all()
             total_qty = allocations.aggregate(total=Sum('allocated_quantity'))['total'] or Decimal('0.00')
@@ -60,8 +62,13 @@ class DeliveryOrder(BaseModel):
             do.total_quantity = total_qty
             do.quantity_to_be_milled = (total_qty * MILLING_YIELD_PERCENT).quantize(Decimal('0.01'))
             
-            running_sum += do.do_quantity_issued
-            do.remaining_quantity = (total_bg_kg - running_sum).quantize(Decimal('0.01'))
+            # Sacks weight delivered against this DO
+            allocated_boras_sum = allocations.aggregate(total=Sum('allocated_boras'))['total'] or 0
+            do_sack_weight = Decimal(allocated_boras_sum) * BORA_WEIGHT
+            
+            running_do_sum += do.do_quantity_issued
+            running_sack_sum += do_sack_weight
+            do.remaining_quantity = (total_bg_kg - running_do_sum - running_sack_sum).quantize(Decimal('0.01'))
             
             # Sync properties for the current instance in memory
             if do.id == self.id:
